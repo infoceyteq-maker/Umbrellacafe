@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import CategoryTabs from "@/components/CategoryTabs";
 import DishCard from "@/components/DishCard";
 import DishModal from "@/components/DishModal";
+import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
 import FloatingBits from "@/components/FloatingBits";
 import { categories, menuItems } from "@/data/menu";
@@ -14,24 +15,49 @@ import { Category, MenuItem } from "@/data/types";
 export default function Home() {
   const [active, setActive] = useState<Category | "All">("All");
   const [selected, setSelected] = useState<MenuItem | null>(null);
-  const [cartCount, setCartCount] = useState(0);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | null>(null);
 
   const filtered = useMemo(
     () => (active === "All" ? menuItems : menuItems.filter((m) => m.category === active)),
     [active]
   );
 
+  const cartCount = useMemo(
+    () => Object.values(cart).reduce((a, b) => a + b, 0),
+    [cart]
+  );
+  const cartItems = useMemo(
+    () => menuItems.filter((m) => cart[m.id]),
+    [cart]
+  );
+
+  function showToast(message: string) {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2600);
+  }
+
   function handleOrder(item: MenuItem) {
-    setCartCount((c) => c + 1);
-    setToast(`Added "${item.name}" to your order`);
+    setCart((c) => ({ ...c, [item.id]: (c[item.id] ?? 0) + 1 }));
+    showToast(`Added "${item.name}" to your order`);
     setSelected(null);
-    window.setTimeout(() => setToast(null), 2600);
+  }
+
+  function setQty(id: string, qty: number) {
+    setCart((c) => {
+      const next = { ...c };
+      if (qty <= 0) delete next[id];
+      else next[id] = qty;
+      return next;
+    });
   }
 
   return (
-    <div className="min-h-screen bg-[#121212]">
-      <Header cartCount={cartCount} />
+    <div className="min-h-screen bg-[#070304]">
+      <Header cartCount={cartCount} onCartOpen={() => setCartOpen(true)} />
       <CategoryTabs categories={["All", ...categories]} active={active} onChange={setActive} />
 
       {/* Hero */}
@@ -51,7 +77,7 @@ export default function Home() {
           transition={{ duration: 0.55, delay: 0.05 }}
           className="font-display relative z-10 mt-2 text-3xl font-extrabold leading-tight text-white sm:text-4xl"
         >
-          The <span className="text-gradient-gold">Digital Menu</span>
+          The <span className="text-gradient-fire">Digital Menu</span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 14 }}
@@ -81,12 +107,20 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-white/5 px-6 py-8 text-center text-xs text-zinc-600">
+      <footer className="border-t border-orange-400/10 px-6 py-8 text-center text-xs text-zinc-600">
         <p>Cafe Umbrella · Ella, Sri Lanka</p>
-        <p className="mt-1">Made with 🧡 for our guests in the hills</p>
+        <p className="mt-1">Made with 🔥 for our guests in the hills</p>
       </footer>
 
       <DishModal item={selected} onClose={() => setSelected(null)} onOrder={handleOrder} />
+      <CartDrawer
+        open={cartOpen}
+        items={cartItems}
+        quantities={cart}
+        onClose={() => setCartOpen(false)}
+        onSetQty={setQty}
+        onClear={() => setCart({})}
+      />
       <Toast message={toast} />
     </div>
   );

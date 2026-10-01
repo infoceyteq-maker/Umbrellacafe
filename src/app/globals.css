@@ -1,16 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #121212;
-  --bg-elevated: #1a1a1a;
-  --bg-card: #191919;
-  --gold: #ffb347;
-  --gold-soft: #ffd27a;
-  --orange: #ff7a1a;
-  --orange-neon: #ff8c1a;
-  --text: #f5f1ea;
-  --text-dim: #a8a29a;
-  --border: rgba(255, 179, 71, 0.16);
+  --bg: #070304;
+  --bg-elevated: #16090a;
+  --bg-card: #150809;
+  --red: #e6202e;
+  --red-deep: #b30f1e;
+  --orange: #ff540f;
+  --orange-neon: #ff6a1a;
+  --flame: #ffb347;
+  --flame-soft: #ffd27a;
+  --text: #f7efe9;
+  --text-dim: #a89c96;
+  --border: rgba(255, 84, 15, 0.18);
 }
 
 @theme inline {
@@ -52,7 +54,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--gold), var(--orange));
+  background: linear-gradient(180deg, var(--orange), var(--red));
   border-radius: 999px;
 }
 ::-webkit-scrollbar-track {
@@ -67,12 +69,12 @@ body {
   scrollbar-width: none;
 }
 
-/* ---------- Backdrop texture ---------- */
+/* ---------- Backdrop texture (fire glow) ---------- */
 .grain-bg {
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(255, 138, 26, 0.09), transparent 40%),
-    radial-gradient(circle at 85% 0%, rgba(255, 195, 90, 0.08), transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(255, 122, 26, 0.07), transparent 50%);
+    radial-gradient(circle at 15% 10%, rgba(230, 32, 46, 0.11), transparent 40%),
+    radial-gradient(circle at 85% 0%, rgba(255, 84, 15, 0.11), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(179, 15, 30, 0.12), transparent 50%);
 }
 
 /* ---------- Animations ---------- */
@@ -126,10 +128,30 @@ body {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 138, 26, 0.55);
+    box-shadow: 0 0 0 0 rgba(255, 60, 10, 0.6);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 138, 26, 0);
+    box-shadow: 0 0 0 8px rgba(255, 60, 10, 0);
+  }
+}
+
+@keyframes flame-flicker {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.97);
+  }
+  75% {
+    opacity: 0.95;
+    transform: scale(1.03);
   }
 }
 
@@ -171,6 +193,10 @@ body {
   animation: pulse-glow 2.4s ease-in-out infinite;
 }
 
+.animate-flame {
+  animation: flame-flicker 2.2s ease-in-out infinite;
+}
+
 .animate-shimmer {
   background-size: 200% 100%;
   animation: shimmer 2.6s linear infinite;
@@ -183,9 +209,9 @@ body {
   background: linear-gradient(
     100deg,
     transparent 30%,
-    rgba(255, 210, 122, 0.16) 45%,
-    rgba(255, 210, 122, 0.28) 50%,
-    rgba(255, 210, 122, 0.16) 55%,
+    rgba(255, 130, 50, 0.14) 45%,
+    rgba(255, 170, 90, 0.26) 50%,
+    rgba(255, 130, 50, 0.14) 55%,
     transparent 70%
   );
   transform: translateX(-120%) skewX(-20deg);
@@ -196,8 +222,13 @@ body {
   animation: sheen-sweep 1.1s ease forwards;
 }
 
-.text-gradient-gold {
-  background: linear-gradient(90deg, var(--gold-soft), var(--orange));
+.text-gradient-fire {
+  background: linear-gradient(
+    92deg,
+    var(--flame-soft) 0%,
+    var(--orange-neon) 48%,
+    var(--red) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
