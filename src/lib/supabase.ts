@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { AdminMenuItem, CafeOrder, OrderStatus } from "@/data/admin";
+import { AdminMenuItem, CafeOrder, OrderStatus, OrderType } from "@/data/admin";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey =
@@ -33,6 +33,7 @@ export type OrderRow = {
   items: CafeOrder["items"];
   total: number;
   status: OrderStatus;
+  order_type: OrderType;
   payment: CafeOrder["payment"];
   order_date: string;
   order_time: string;
@@ -80,6 +81,7 @@ export function orderToRow(order: CafeOrder): OrderRow {
     items: order.items,
     total: order.total,
     status: order.status,
+    order_type: order.orderType,
     payment: order.payment,
     order_date: order.date,
     order_time: order.time,
@@ -96,6 +98,7 @@ export function orderFromRow(row: OrderRow): CafeOrder {
     items: row.items ?? [],
     total: Number(row.total),
     status: row.status,
+    orderType: row.order_type ?? "Dine-in",
     payment: row.payment,
     date: row.order_date,
     time: row.order_time,

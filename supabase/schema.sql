@@ -26,6 +26,7 @@ create table if not exists public.orders (
   items jsonb not null default '[]'::jsonb,
   total numeric(10, 2) not null default 0,
   status text not null default 'Preparing',
+  order_type text not null default 'Dine-in',
   payment text not null default 'Cash',
   order_date date not null default current_date,
   order_time text not null default '',
@@ -33,6 +34,7 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+alter table public.orders add column if not exists order_type text not null default 'Dine-in';
 alter table public.menu_items enable row level security;
 alter table public.orders enable row level security;
 

@@ -9,6 +9,9 @@ export type AdminMenuItem = MenuItem & {
 };
 
 export type OrderStatus = "Preparing" | "Ready" | "Completed" | "Cancelled";
+export type OrderType = "Dine-in" | "Takeaway" | "Delivery";
+
+export const orderTypes: OrderType[] = ["Dine-in", "Takeaway", "Delivery"];
 
 export interface OrderLine {
   name: string;
@@ -24,6 +27,7 @@ export interface CafeOrder {
   items: OrderLine[];
   total: number;
   status: OrderStatus;
+  orderType: OrderType;
   payment: "Cash" | "Card" | "Online";
   date: string;
   time: string;
