@@ -40,7 +40,15 @@ export default function CartDrawer({
 
   function closeDrawer() {
     setOrderError(null);
+    setSubmittedOrderId(null);
+    setSubmitting(false);
     onClose();
+  }
+
+  function clearOrder() {
+    setOrderError(null);
+    setSubmittedOrderId(null);
+    onClear();
   }
 
   async function submitOrder() {
@@ -224,7 +232,7 @@ export default function CartDrawer({
                 </div>
 
                 <button
-                  onClick={onClear}
+                  onClick={clearOrder}
                   className="mt-2 w-full rounded-full border border-white/10 py-2.5 text-xs font-medium text-zinc-400 transition hover:border-red-400/40 hover:text-red-300"
                 >
                   Clear order
