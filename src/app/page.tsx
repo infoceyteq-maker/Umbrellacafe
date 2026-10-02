@@ -33,17 +33,32 @@ export default function Home() {
 
   useEffect(() => {
     const savedMenu = window.localStorage.getItem(MENU_STORAGE_KEY);
-    if (!savedMenu) return;
-    try {
-      const parsed = JSON.parse(savedMenu) as AdminMenuItem[];
-      if (Array.isArray(parsed)) {
-        // The menu is shared with the local-only admin workspace.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMenu(parsed.filter((item) => item.active !== false));
+    if (savedMenu) {
+      try {
+        const parsed = JSON.parse(savedMenu) as AdminMenuItem[];
+        if (Array.isArray(parsed) && parsed.length) {
+          // Older saved menus predate offer pricing, so fall back to the
+          // starter values for any field the stored copy does not carry.
+          const defaults = new Map(menuItems.map((item) => [item.id, item]));
+          const merged = parsed
+            .filter((item) => item.active !== false)
+            .map((item) => {
+              const fallback = defaults.get(item.id);
+              return {
+                ...item,
+                offerPrice:
+                  item.offerPrice === undefined ? fallback?.offerPrice ?? null : item.offerPrice,
+              };
+            });
+          // The menu is shared with the local-only admin workspace.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setMenu(merged);
+        }
+      } catch {
+        // Keep the starter menu if the browser has an invalid saved value.
       }
-    } catch {
-      // Keep the starter menu if the browser has an invalid saved value.
     }
+
     const savedFlyers = window.localStorage.getItem(FLYERS_STORAGE_KEY);
     if (savedFlyers) {
       try {
@@ -54,33 +69,34 @@ export default function Home() {
       }
     }
 
-    if (supabase) {
-      void (async () => {
-        try {
-          const { data } = await supabase
-            .from("menu_items")
-            .select("*")
-            .eq("active", true)
-            .order("created_at", { ascending: false });
-          if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
-        } catch {
-          // A dropped connection should leave the starter menu in place.
-        }
-      })();
+    if (!supabase) return;
+    const client = supabase;
 
-      void (async () => {
-        try {
-          const { data } = await supabase
-            .from("combo_flyers")
-            .select("*")
-            .eq("active", true)
-            .order("created_at", { ascending: false });
-          if (data?.length) setFlyers(data.map((row) => flyerFromRow(row)));
-        } catch {
-          // Flyers are optional; the offers panel simply shows dishes only.
-        }
-      })();
-    }
+    void (async () => {
+      try {
+        const { data } = await client
+          .from("menu_items")
+          .select("*")
+          .eq("active", true)
+          .order("created_at", { ascending: false });
+        if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
+      } catch {
+        // A dropped connection should leave the current menu in place.
+      }
+    })();
+
+    void (async () => {
+      try {
+        const { data } = await client
+          .from("combo_flyers")
+          .select("*")
+          .eq("active", true)
+          .order("created_at", { ascending: false });
+        if (data?.length) setFlyers(data.map((row) => flyerFromRow(row)));
+      } catch {
+        // Flyers are optional; the offers panel simply shows dishes only.
+      }
+    })();
   }, []);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
@@ -209,7 +225,7 @@ export default function Home() {
         </a>
       </footer>
 
-      {offerCount > 0 && <OffersButton count={offerCount} onClick={() => setOffersOpen(true)} />}
+      <OffersButton count={offerCount} onClick={() => setOffersOpen(true)} />
       <OffersDrawer
         open={offersOpen}
         offers={offerItems}

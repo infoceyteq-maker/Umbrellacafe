@@ -385,7 +385,8 @@ body {
   position: fixed;
   right: 0;
   top: 50%;
-  z-index: 120;
+  /* Below the dish modal (100), cart drawer (150) and offers panel (160). */
+  z-index: 90;
   display: flex;
   align-items: center;
   justify-content: center;
