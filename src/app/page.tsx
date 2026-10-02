@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -13,18 +13,41 @@ import FloatingBits from "@/components/FloatingBits";
 import SocialBar from "@/components/SocialBar";
 import { categories, menuItems } from "@/data/menu";
 import { Category, MenuItem } from "@/data/types";
+import { MENU_STORAGE_KEY, AdminMenuItem } from "@/data/admin";
+import { menuFromRow, supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const [menu, setMenu] = useState<MenuItem[]>(menuItems);
   const [active, setActive] = useState<Category | "All">("All");
   const [selected, setSelected] = useState<MenuItem | null>(null);
+
+  useEffect(() => {
+    const savedMenu = window.localStorage.getItem(MENU_STORAGE_KEY);
+    if (!savedMenu) return;
+    try {
+      const parsed = JSON.parse(savedMenu) as AdminMenuItem[];
+      if (Array.isArray(parsed)) {
+        // The menu is shared with the local-only admin workspace.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMenu(parsed.filter((item) => item.active !== false));
+      }
+    } catch {
+      // Keep the starter menu if the browser has an invalid saved value.
+    }
+    if (supabase) {
+      void supabase.from("menu_items").select("*").eq("active", true).order("created_at", { ascending: false }).then(({ data }) => {
+        if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
+      });
+    }
+  }, []);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
   const filtered = useMemo(
-    () => (active === "All" ? menuItems : menuItems.filter((m) => m.category === active)),
-    [active]
+    () => (active === "All" ? menu : menu.filter((m) => m.category === active)),
+    [active, menu]
   );
 
   const cartCount = useMemo(
@@ -32,8 +55,8 @@ export default function Home() {
     [cart]
   );
   const cartItems = useMemo(
-    () => menuItems.filter((m) => cart[m.id]),
-    [cart]
+    () => menu.filter((m) => cart[m.id]),
+    [cart, menu]
   );
 
   function showToast(message: string) {
@@ -127,6 +150,9 @@ export default function Home() {
       <footer className="border-t border-orange-400/10 px-6 py-8 text-center text-xs text-zinc-600">
         <p>Cafe Umbrella · Passara Road, 3rd Mile, Ella, Uva Province 90090</p>
         <p className="mt-1">Made with 🔥 for our guests in the hills</p>
+        <a href="/admin" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-orange-400/15 bg-orange-400/[0.04] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.15em] text-orange-300/65 transition hover:border-orange-400/40 hover:bg-orange-400/10 hover:text-orange-200">
+          Staff admin <span aria-hidden="true">→</span>
+        </a>
       </footer>
 
       <DishModal item={selected} onClose={() => setSelected(null)} onOrder={handleOrder} />

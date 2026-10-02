@@ -31,9 +31,17 @@ export default function Header({
           </div>
         </div>
 
-        <button
-          type="button"
-          aria-label="View your order"
+        <div className="flex items-center gap-2.5">
+          <a
+            href="/admin"
+            aria-label="Open staff admin"
+            className="rounded-full border border-orange-400/15 bg-orange-400/[0.04] px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-orange-300/70 transition hover:border-orange-400/45 hover:bg-orange-400/10 hover:text-orange-200 sm:px-3"
+          >
+            Admin
+          </a>
+          <button
+            type="button"
+            aria-label="View your order"
           onClick={onCartOpen}
           className="relative flex h-9 w-9 items-center justify-center rounded-full border border-orange-400/25 bg-white/[0.03] text-orange-200 transition hover:border-orange-400/60 hover:bg-white/[0.06] sm:h-10 sm:w-10"
         >
@@ -48,6 +56,7 @@ export default function Header({
             </span>
           )}
         </button>
+        </div>
       </div>
     </header>
   );

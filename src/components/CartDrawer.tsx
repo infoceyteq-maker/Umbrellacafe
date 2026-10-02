@@ -1,8 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { CafeOrder, OrderType, orderTypes } from "@/data/admin";
+import { orderToRow, supabase } from "@/lib/supabase";
 import { MenuItem } from "@/data/types";
-import { buildWhatsAppOrderLink } from "@/data/config";
+
+const orderTypeIcons: Record<OrderType, string> = {
+  "Dine-in": "🍽️",
+  Takeaway: "🥡",
+  Delivery: "🛵",
+};
 
 export default function CartDrawer({
   open,
@@ -19,14 +27,73 @@ export default function CartDrawer({
   onSetQty: (id: string, qty: number) => void;
   onClear: () => void;
 }) {
-  const lines = items.map(
-    (i) =>
-      `${quantities[i.id]} × ${i.name} — Rs. ${(
-        i.price * quantities[i.id]
-      ).toLocaleString("en-LK")}`
-  );
+  const [orderType, setOrderType] = useState<OrderType>("Dine-in");
+  const [customerName, setCustomerName] = useState("");
+  const [customerContact, setCustomerContact] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [tableOrNote, setTableOrNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
   const total = items.reduce((s, i) => s + i.price * quantities[i.id], 0);
-  const waLink = buildWhatsAppOrderLink(lines, total);
+
+  function closeDrawer() {
+    setOrderError(null);
+    setSubmittedOrderId(null);
+    setSubmitting(false);
+    onClose();
+  }
+
+  function clearOrder() {
+    setOrderError(null);
+    setSubmittedOrderId(null);
+    onClear();
+  }
+
+  async function submitOrder() {
+    setOrderError(null);
+    if (!customerName.trim() || !customerContact.trim()) {
+      setOrderError("Please add your name and phone number before confirming.");
+      return;
+    }
+    if (!supabase) {
+      setOrderError("Online ordering is not connected yet. Please try again after the backend is configured.");
+      return;
+    }
+
+    setSubmitting(true);
+    const now = new Date();
+    // This runs only after the customer presses Confirm order.
+    // eslint-disable-next-line react-hooks/purity
+    const orderId = String(Date.now()).slice(-8);
+    const order: CafeOrder = {
+      id: orderId,
+      customer: customerName.trim(),
+      contact: customerContact.trim(),
+      email: customerEmail.trim() || undefined,
+      items: items.map((item) => ({
+        name: item.name,
+        quantity: quantities[item.id],
+        price: item.price,
+      })),
+      total,
+      status: "Preparing",
+      orderType,
+      payment: "Cash",
+      date: now.toISOString().slice(0, 10),
+      time: now.toLocaleTimeString("en-LK", { hour: "2-digit", minute: "2-digit" }),
+      table: tableOrNote.trim() || undefined,
+    };
+
+    const { error } = await supabase.from("orders").insert(orderToRow(order));
+    if (error) {
+      setOrderError("Order could not be sent. Please run the Supabase schema and try again.");
+    } else {
+      setSubmittedOrderId(orderId);
+    }
+    setSubmitting(false);
+  }
 
   return (
     <AnimatePresence>
@@ -37,7 +104,7 @@ export default function CartDrawer({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22 }}
-          onClick={onClose}
+          onClick={closeDrawer}
         >
           <motion.div
             className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-[1.75rem] border border-orange-400/15 bg-[#120607] sm:rounded-[1.75rem]"
@@ -58,7 +125,7 @@ export default function CartDrawer({
                 </p>
               </div>
               <button
-                onClick={onClose}
+                onClick={closeDrawer}
                 aria-label="Close order"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white transition hover:border-orange-400/40"
               >
@@ -130,26 +197,42 @@ export default function CartDrawer({
                   </span>
                 </div>
 
-                {waLink ? (
-                  <a
-                    href={waLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb347] via-[#ff540f] to-[#e6202e] py-3.5 text-sm font-bold uppercase tracking-wide text-[#2b0500] shadow-[0_10px_30px_-8px_rgba(230,32,46,0.7)] transition active:scale-[0.98]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.2 1.2-1.7 1.2-.4.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.5-2.6-1.1-4.3-3.7-4.4-3.9-.1-.2-1.1-1.4-1.1-2.7 0-1.3.7-1.9.9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.3.3c-.1.1-.2.3-.1.5.2.3.7 1.2 1.6 1.9 1.1 1 2 1.3 2.3 1.4.2.1.4.1.5-.1l.8-1c.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.1.1.5-.1 1.1Z" />
-                    </svg>
-                    Order via WhatsApp
-                  </a>
-                ) : (
-                  <p className="mt-3 rounded-2xl border border-orange-400/15 bg-white/[0.02] px-4 py-3 text-center text-xs leading-relaxed text-zinc-400">
-                    🙋 Show this screen to your waiter to place the order.
-                  </p>
-                )}
+                <div className="mt-4 rounded-2xl border border-orange-400/15 bg-orange-400/[0.04] p-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-white">Finish your order</p>
+                      <p className="mt-1 text-[10px] text-zinc-500">Choose how you will receive it.</p>
+                    </div>
+                    {submittedOrderId && <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[10px] font-medium text-emerald-300">Sent #{submittedOrderId}</span>}
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-1.5">
+                    {orderTypes.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setOrderType(type)}
+                        className={`rounded-xl border px-2 py-2 text-[10px] font-medium transition ${orderType === type ? "border-orange-400/50 bg-orange-400/15 text-orange-100" : "border-white/10 bg-white/[0.02] text-zinc-500 hover:border-orange-400/25 hover:text-zinc-200"}`}
+                      >
+                        <span className="block text-base">{orderTypeIcons[type]}</span>
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <input value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Your name *" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
+                    <input value={customerContact} onChange={(event) => setCustomerContact(event.target.value)} placeholder="Phone number *" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
+                    <input type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} placeholder="Email (optional)" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
+                    <input value={tableOrNote} onChange={(event) => setTableOrNote(event.target.value)} placeholder={orderType === "Dine-in" ? "Table number" : orderType === "Delivery" ? "Delivery note" : "Pickup note"} className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
+                  </div>
+                  {orderError && <p className="mt-2 rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2 text-[10px] leading-relaxed text-red-300">{orderError}</p>}
+                  {submittedOrderId && <p className="mt-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[10px] leading-relaxed text-emerald-300">Order sent to Cafe Umbrella. The team can now see it in the admin order desk.</p>}
+                  <button type="button" onClick={submitOrder} disabled={submitting || Boolean(submittedOrderId)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb347] via-[#ff540f] to-[#e6202e] py-3 text-xs font-bold uppercase tracking-wide text-[#2b0500] shadow-[0_10px_30px_-8px_rgba(230,32,46,0.55)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
+                    {submitting ? "Sending order..." : submittedOrderId ? "Order sent to kitchen" : "Confirm order"}
+                  </button>
+                </div>
 
                 <button
-                  onClick={onClear}
+                  onClick={clearOrder}
                   className="mt-2 w-full rounded-full border border-white/10 py-2.5 text-xs font-medium text-zinc-400 transition hover:border-red-400/40 hover:text-red-300"
                 >
                   Clear order
