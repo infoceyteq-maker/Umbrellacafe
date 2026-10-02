@@ -4,9 +4,10 @@ A premium, mobile-first digital food menu web app for **Cafe Umbrella, Ella**, b
 
 ## Highlights
 
-- Pure **black theme** (`#070304`) with fiery **red / orange / flame** accents.
+- Forest-green mobile-first theme (`#06120e`) with mint, cream and deep-green accents that match the Cafe Umbrella logo.
 - 8 categories: Soup, Stews, Omelette, Main Dish, Chopsey, Boiled Vegetables, Signature Roti, Kottu Junction.
-- Scrollable dish grid with a **3D pointer-tilt parallax** effect on every card — the plate lifts toward you (`translateZ`) and a flame glow follows your pointer.
+- Scrollable responsive dish grid with a **3D pointer-tilt parallax** effect on every card — the plate lifts toward you (`translateZ`) and a soft green glow follows your pointer.
+- Compact mobile bottom navigation for Home, Menu, Order and Info, with generous safe-area spacing for phones.
 - Continuous subtle animations: slow-rotating "plate" photography, flickering fire glow, floating ember/spice particles, a sheen sweep on hover, and a pulsing "Special Offer" badge.
 - Clicking a dish triggers a shared-element **morph transition** (Framer Motion `layoutId`) from the grid card into a full-screen detail view with a 3D entrance.
 - Detail view: large rotating hero image, bold name & price, ingredients chips, prep-time indicator, spice level, special-offer badge, and a prominent "Order Now" button.
@@ -44,5 +45,5 @@ Never commit `.env.local` or a `service_role` key. The included SQL policies are
 
 ## Notes
 
-- The dish photography is AI-generated to match the premium black/fire aesthetic.
+- The dish photography is AI-generated to match the premium forest-green cafe aesthetic.
 - The logo in the header/favicon is a lightweight inline SVG umbrella mark with a fire gradient; a raster logo asset can be swapped in via `public/logo/` (drop in `public/logo/logo.png` and use `next/image` in `src/components/Logo.tsx`).

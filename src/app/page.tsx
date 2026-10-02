@@ -11,6 +11,7 @@ import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
 import FloatingBits from "@/components/FloatingBits";
 import SocialBar from "@/components/SocialBar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { categories, menuItems } from "@/data/menu";
 import { Category, MenuItem } from "@/data/types";
 import { MENU_STORAGE_KEY, AdminMenuItem } from "@/data/admin";
@@ -81,8 +82,10 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070304]">
-      <Header cartCount={cartCount} onCartOpen={() => setCartOpen(true)} />
+    <div className="min-h-screen bg-[#06120e]">
+      <div id="home" className="scroll-mt-24">
+        <Header cartCount={cartCount} onCartOpen={() => setCartOpen(true)} />
+      </div>
       <CategoryTabs categories={["All", ...categories]} active={active} onChange={setActive} />
 
       {/* Hero */}
@@ -93,7 +96,7 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 mx-auto mb-7 max-w-4xl overflow-hidden rounded-2xl border border-orange-400/20 shadow-[0_18px_50px_-18px_rgba(255,84,15,0.45)]"
+          className="relative z-10 mx-auto mb-7 max-w-4xl overflow-hidden rounded-2xl border border-emerald-400/20 shadow-[0_18px_50px_-18px_rgba(45,155,119,0.45)]"
         >
           <Image
             src="/cover/cover.jpg"
@@ -104,14 +107,14 @@ export default function Home() {
             sizes="(max-width: 896px) 100vw, 896px"
             className="h-auto w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#070304] via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#06120e] via-transparent to-transparent" />
         </motion.div>
 
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative z-10 text-[11px] font-medium uppercase tracking-[0.4em] text-orange-300/70"
+          className="relative z-10 text-[11px] font-medium uppercase tracking-[0.4em] text-emerald-300/70"
         >
           Perched above the Ella Valley
         </motion.p>
@@ -130,7 +133,7 @@ export default function Home() {
       </section>
 
       {/* Grid */}
-      <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+      <main id="menu" className="scroll-mt-28 mx-auto max-w-6xl px-4 pb-32 sm:px-6 sm:pb-24">
         <motion.div
           layout
           className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4"
@@ -147,10 +150,10 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-orange-400/10 px-6 py-8 text-center text-xs text-zinc-600">
+      <footer id="info" className="scroll-mt-28 border-t border-emerald-400/10 px-6 py-10 pb-32 text-center text-xs text-zinc-600 sm:pb-8">
         <p>Cafe Umbrella · Passara Road, 3rd Mile, Ella, Uva Province 90090</p>
-        <p className="mt-1">Made with 🔥 for our guests in the hills</p>
-        <a href="/admin" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-orange-400/15 bg-orange-400/[0.04] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.15em] text-orange-300/65 transition hover:border-orange-400/40 hover:bg-orange-400/10 hover:text-orange-200">
+        <p className="mt-1">Made with care for our guests in the hills</p>
+        <a href="/admin" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/[0.04] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.15em] text-emerald-300/65 transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200">
           Staff admin <span aria-hidden="true">→</span>
         </a>
       </footer>
@@ -165,6 +168,7 @@ export default function Home() {
         onClear={() => setCart({})}
       />
       <Toast message={toast} />
+      <MobileBottomNav cartCount={cartCount} onCartOpen={() => setCartOpen(true)} />
     </div>
   );
 }
