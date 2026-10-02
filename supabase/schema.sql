@@ -35,6 +35,28 @@ create table if not exists public.orders (
 );
 
 alter table public.orders add column if not exists order_type text not null default 'Dine-in';
+alter table public.menu_items add column if not exists offer_price numeric(10, 2);
+
+create table if not exists public.combo_flyers (
+  id text primary key,
+  title text not null,
+  detail text not null default '',
+  image text not null,
+  price numeric(10, 2),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.combo_flyers enable row level security;
+
+drop policy if exists "public can read flyers" on public.combo_flyers;
+drop policy if exists "public can insert flyers" on public.combo_flyers;
+drop policy if exists "public can update flyers" on public.combo_flyers;
+drop policy if exists "public can delete flyers" on public.combo_flyers;
+create policy "public can read flyers" on public.combo_flyers for select to anon, authenticated using (true);
+create policy "public can insert flyers" on public.combo_flyers for insert to anon, authenticated with check (true);
+create policy "public can update flyers" on public.combo_flyers for update to anon, authenticated using (true) with check (true);
+create policy "public can delete flyers" on public.combo_flyers for delete to anon, authenticated using (true);
 alter table public.menu_items enable row level security;
 alter table public.orders enable row level security;
 

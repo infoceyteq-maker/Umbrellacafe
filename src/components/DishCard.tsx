@@ -2,6 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MenuItem } from "@/data/types";
+import { discountPercent, isOnOffer } from "@/data/admin";
 import DishImage from "./DishImage";
 import FloatingBits from "./FloatingBits";
 
@@ -56,6 +57,12 @@ export default function DishCard({
         whileTap={{ scale: 0.97 }}
         className="card-sheen group relative flex w-full flex-col overflow-hidden rounded-3xl border border-emerald-400/10 bg-[#052017] p-3.5 text-left shadow-[0_10px_30px_-15px_rgba(0,0,0,0.8)] transition-shadow duration-300 hover:border-emerald-400/30 hover:shadow-[0_18px_40px_-12px_rgba(5,150,105,0.35)] sm:p-4"
       >
+        {isOnOffer(item) && (
+          <span className="offer-ribbon absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider sm:text-[10px]">
+            −{discountPercent(item)}%
+          </span>
+        )}
+
         {item.special && (
           <span className="animate-pulse-glow absolute left-3 top-3 z-20 rounded-full bg-gradient-to-r from-[#7cf7b0] via-[#22c77e] to-[#059669] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#03291b] sm:text-[10px]">
             ✦ Special
@@ -107,8 +114,15 @@ export default function DishCard({
             {item.name}
           </h3>
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-gradient-fire font-display text-base font-bold sm:text-lg">
-              Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
+            <span className="flex flex-wrap items-baseline gap-1.5">
+              <span className="text-gradient-fire font-display text-base font-bold sm:text-lg">
+                Rs. {Number((isOnOffer(item) ? item.offerPrice : item.price) ?? 0).toLocaleString("en-LK")}
+              </span>
+              {isOnOffer(item) && (
+                <span className="text-[11px] text-[#6ba273] line-through">
+                  Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
+                </span>
+              )}
             </span>
             <span className="flex items-center gap-1 rounded-full bg-white/[0.04] px-2 py-1 text-[10px] text-[#a1d99b]">
               🕒 {item.prepTime}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CafeOrder, dateKey, OrderType, orderTypes } from "@/data/admin";
+import { CafeOrder, dateKey, isOnOffer, OrderType, orderTypes } from "@/data/admin";
 import { orderToRow, supabase } from "@/lib/supabase";
 import { MenuItem } from "@/data/types";
 
@@ -35,7 +35,9 @@ export default function CartDrawer({
   const [sentOrder, setSentOrder] = useState<{ id: string; signature: string } | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
 
-  const total = items.reduce((s, i) => s + i.price * (quantities[i.id] ?? 0), 0);
+  // Offer dishes are billed at their discounted price.
+  const unitPrice = (item: MenuItem) => (isOnOffer(item) ? Number(item.offerPrice) : item.price);
+  const total = items.reduce((s, i) => s + unitPrice(i) * (quantities[i.id] ?? 0), 0);
   const cartSignature = items.map((item) => `${item.id}x${quantities[item.id] ?? 0}`).join("|");
 
   // A new/edited basket is a new order, so the "already sent" lock lifts on its own.
@@ -92,7 +94,7 @@ export default function CartDrawer({
       items: items.map((item) => ({
         name: item.name,
         quantity: quantities[item.id] ?? 0,
-        price: item.price,
+        price: unitPrice(item),
       })),
       total,
       status: "Preparing",
@@ -181,7 +183,7 @@ export default function CartDrawer({
                           {item.name}
                         </p>
                         <p className="text-xs text-emerald-300/70">
-                          Rs. {(item.price * (quantities[item.id] ?? 0)).toLocaleString("en-LK")}
+                          Rs. {(unitPrice(item) * (quantities[item.id] ?? 0)).toLocaleString("en-LK")}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

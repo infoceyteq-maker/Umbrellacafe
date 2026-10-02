@@ -19,4 +19,6 @@ export interface MenuItem {
   description: string;
   special?: boolean;
   spiceLevel?: 1 | 2 | 3;
+  /** Discounted price while the dish is on offer. Null/undefined = no offer. */
+  offerPrice?: number | null;
 }

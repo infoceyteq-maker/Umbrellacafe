@@ -47,6 +47,7 @@ export const menuItems: MenuItem[] = [
       "Velvety wild mushroom soup slow-cooked with garlic and cream, topped with crisp mushroom shavings and a whisper of thyme.",
     special: true,
     spiceLevel: 1,
+    offerPrice: 560,
   },
   {
     id: "beef-stew",
@@ -58,6 +59,7 @@ export const menuItems: MenuItem[] = [
     prepTime: "35 Mins",
     description:
       "Tender beef simmered for hours in a rich, aromatic gravy with garden vegetables and curry leaves — a hearty highland classic.",
+    offerPrice: 1190,
     spiceLevel: 2,
   },
   {

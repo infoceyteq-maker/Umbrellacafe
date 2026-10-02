@@ -11,15 +11,25 @@ import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
 import FloatingBits from "@/components/FloatingBits";
 import SocialBar from "@/components/SocialBar";
+import OffersButton from "@/components/OffersButton";
+import OffersDrawer from "@/components/OffersDrawer";
 import { categories, menuItems } from "@/data/menu";
 import { Category, MenuItem } from "@/data/types";
-import { MENU_STORAGE_KEY, AdminMenuItem } from "@/data/admin";
-import { menuFromRow, supabase } from "@/lib/supabase";
+import {
+  AdminMenuItem,
+  ComboFlyer,
+  FLYERS_STORAGE_KEY,
+  isOnOffer,
+  MENU_STORAGE_KEY,
+} from "@/data/admin";
+import { flyerFromRow, menuFromRow, supabase } from "@/lib/supabase";
 
 export default function Home() {
   const [menu, setMenu] = useState<MenuItem[]>(menuItems);
   const [active, setActive] = useState<Category | "All">("All");
   const [selected, setSelected] = useState<MenuItem | null>(null);
+  const [flyers, setFlyers] = useState<ComboFlyer[]>([]);
+  const [offersOpen, setOffersOpen] = useState(false);
 
   useEffect(() => {
     const savedMenu = window.localStorage.getItem(MENU_STORAGE_KEY);
@@ -34,6 +44,16 @@ export default function Home() {
     } catch {
       // Keep the starter menu if the browser has an invalid saved value.
     }
+    const savedFlyers = window.localStorage.getItem(FLYERS_STORAGE_KEY);
+    if (savedFlyers) {
+      try {
+        const parsed = JSON.parse(savedFlyers) as ComboFlyer[];
+        if (Array.isArray(parsed)) setFlyers(parsed.filter((flyer) => flyer.active !== false));
+      } catch {
+        // Ignore malformed local flyer data.
+      }
+    }
+
     if (supabase) {
       void (async () => {
         try {
@@ -47,6 +67,19 @@ export default function Home() {
           // A dropped connection should leave the starter menu in place.
         }
       })();
+
+      void (async () => {
+        try {
+          const { data } = await supabase
+            .from("combo_flyers")
+            .select("*")
+            .eq("active", true)
+            .order("created_at", { ascending: false });
+          if (data?.length) setFlyers(data.map((row) => flyerFromRow(row)));
+        } catch {
+          // Flyers are optional; the offers panel simply shows dishes only.
+        }
+      })();
     }
   }, []);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -58,6 +91,9 @@ export default function Home() {
     () => (active === "All" ? menu : menu.filter((m) => m.category === active)),
     [active, menu]
   );
+
+  const offerItems = useMemo(() => menu.filter((item) => isOnOffer(item)), [menu]);
+  const offerCount = offerItems.length + flyers.length;
 
   const cartItems = useMemo(
     () => menu.filter((m) => cart[m.id]),
@@ -172,6 +208,18 @@ export default function Home() {
           Staff admin <span aria-hidden="true">→</span>
         </a>
       </footer>
+
+      {offerCount > 0 && <OffersButton count={offerCount} onClick={() => setOffersOpen(true)} />}
+      <OffersDrawer
+        open={offersOpen}
+        offers={offerItems}
+        flyers={flyers}
+        onClose={() => setOffersOpen(false)}
+        onSelect={(item) => {
+          setOffersOpen(false);
+          setSelected(item);
+        }}
+      />
 
       <DishModal item={selected} onClose={() => setSelected(null)} onOrder={handleOrder} />
       <CartDrawer

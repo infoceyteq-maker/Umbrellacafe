@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MenuItem } from "@/data/types";
+import { discountPercent, isOnOffer } from "@/data/admin";
 import DishImage from "./DishImage";
 import FloatingBits from "./FloatingBits";
 
@@ -109,8 +110,18 @@ export default function DishModal({
 
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <span className="text-gradient-fire font-display text-2xl font-extrabold sm:text-3xl">
-                  Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
+                  Rs. {Number((isOnOffer(item) ? item.offerPrice : item.price) ?? 0).toLocaleString("en-LK")}
                 </span>
+                {isOnOffer(item) && (
+                  <>
+                    <span className="text-sm text-[#6ba273] line-through">
+                      Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
+                    </span>
+                    <span className="offer-ribbon rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide">
+                      Save {discountPercent(item)}%
+                    </span>
+                  </>
+                )}
                 <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-[#c7e9c0]">
                   🕒 {item.prepTime}
                 </span>
@@ -148,7 +159,7 @@ export default function DishModal({
                 onClick={() => onOrder(item)}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7cf7b0] via-[#22c77e] to-[#059669] py-3.5 text-sm font-bold uppercase tracking-wide text-[#03291b] shadow-[0_10px_30px_-8px_rgba(5,150,105,0.7)] transition active:scale-[0.98] sm:text-base"
               >
-                Order Now — Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
+                Order Now — Rs. {Number((isOnOffer(item) ? item.offerPrice : item.price) ?? 0).toLocaleString("en-LK")}
               </button>
             </div>
           </motion.div>

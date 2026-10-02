@@ -379,3 +379,171 @@ body {
 .bar-radiant {
   background: linear-gradient(180deg, #7cf7b0, #10b981 70%, #059669);
 }
+
+/* ---------- Animated side "Offers" tab ---------- */
+.offers-tab {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  transform: translateY(-50%);
+  cursor: pointer;
+  animation: offers-bob 3.2s ease-in-out infinite;
+}
+
+.offers-tab-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 9px 18px;
+  border: 1px solid rgba(199, 233, 192, 0.45);
+  border-right: none;
+  border-radius: 18px 0 0 18px;
+  background: linear-gradient(160deg, #7cf7b0 0%, #39ff88 48%, #10b981 100%);
+  color: #03291b;
+  box-shadow: -8px 0 28px -8px rgba(57, 255, 136, 0.65);
+  transition: padding 220ms ease, filter 220ms ease;
+}
+
+.offers-tab:hover .offers-tab-inner,
+.offers-tab:focus-visible .offers-tab-inner {
+  padding-right: 14px;
+  filter: brightness(1.08);
+}
+
+.offers-tab-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.offers-tab-icon {
+  font-size: 15px;
+  animation: offers-tilt 2.6s ease-in-out infinite;
+}
+
+.offers-tab-count {
+  display: flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #03291b;
+  padding: 0 5px;
+  color: #7cf7b0;
+  font-size: 10px;
+  font-weight: 700;
+  animation: offers-pop 2.4s ease-in-out infinite;
+}
+
+.offers-tab-glow {
+  position: absolute;
+  inset: -16px -6px -16px -22px;
+  z-index: 0;
+  border-radius: 28px 0 0 28px;
+  background: radial-gradient(circle at 70% 50%, rgba(57, 255, 136, 0.5), transparent 72%);
+  filter: blur(14px);
+  animation: offers-breathe 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.offers-tab-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 18px 0 0 18px;
+  border: 1px solid rgba(57, 255, 136, 0.8);
+  animation: offers-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+.offers-tab-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 18px 0 0 18px;
+  pointer-events: none;
+}
+
+.offers-tab-shine::after {
+  content: "";
+  position: absolute;
+  inset: -40% -10%;
+  background: linear-gradient(
+    110deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 62%
+  );
+  transform: translateY(-120%);
+  animation: offers-shine 3.6s ease-in-out infinite;
+}
+
+@keyframes offers-bob {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-52%) translateX(-4px); }
+}
+
+@keyframes offers-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes offers-ring {
+  0% { opacity: 0.85; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.22); }
+  100% { opacity: 0; transform: scale(1.22); }
+}
+
+@keyframes offers-tilt {
+  0%, 100% { transform: rotate(-8deg) scale(1); }
+  50% { transform: rotate(10deg) scale(1.12); }
+}
+
+@keyframes offers-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.16); }
+}
+
+@keyframes offers-shine {
+  0%, 65% { transform: translateY(-120%); }
+  100% { transform: translateY(120%); }
+}
+
+@media (max-width: 640px) {
+  .offers-tab-inner { padding: 13px 7px 15px; }
+  .offers-tab-label { font-size: 10px; letter-spacing: 0.18em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offers-tab,
+  .offers-tab-icon,
+  .offers-tab-count,
+  .offers-tab-glow,
+  .offers-tab-ring,
+  .offers-tab-shine::after {
+    animation: none !important;
+  }
+}
+
+/* ---------- Offer price treatment on dish cards ---------- */
+.offer-ribbon {
+  background: linear-gradient(135deg, #7cf7b0, #39ff88 55%, #10b981);
+  color: #03291b;
+  box-shadow: 0 6px 18px -6px rgba(57, 255, 136, 0.7);
+}

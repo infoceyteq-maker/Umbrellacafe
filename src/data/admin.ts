@@ -3,10 +3,33 @@ import { Category, MenuItem } from "./types";
 export const MENU_STORAGE_KEY = "umbrellacafe-menu";
 export const ORDERS_STORAGE_KEY = "umbrellacafe-orders";
 export const ADMIN_SESSION_KEY = "umbrellacafe-admin-session";
+export const FLYERS_STORAGE_KEY = "umbrellacafe-flyers";
 
 export type AdminMenuItem = MenuItem & {
   active: boolean;
 };
+
+/** A combo / package flyer uploaded by the cafe team. */
+export interface ComboFlyer {
+  id: string;
+  title: string;
+  detail: string;
+  image: string;
+  price: number | null;
+  active: boolean;
+  createdAt: string;
+}
+
+/** A dish counts as an offer when it has a valid, cheaper offer price. */
+export function isOnOffer(item: { price: number; offerPrice?: number | null }): boolean {
+  return typeof item.offerPrice === "number" && item.offerPrice > 0 && item.offerPrice < item.price;
+}
+
+/** Whole-rupee discount percentage, e.g. 20 for "20% off". */
+export function discountPercent(item: { price: number; offerPrice?: number | null }): number {
+  if (!isOnOffer(item) || !item.price) return 0;
+  return Math.round(((item.price - (item.offerPrice as number)) / item.price) * 100);
+}
 
 export type OrderStatus = "Preparing" | "Ready" | "Completed" | "Cancelled";
 export type OrderType = "Dine-in" | "Takeaway" | "Delivery";

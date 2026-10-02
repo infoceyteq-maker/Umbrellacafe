@@ -16,6 +16,10 @@ import { categories, menuItems } from "@/data/menu";
 import {
   ADMIN_SESSION_KEY,
   AdminMenuItem,
+  ComboFlyer,
+  discountPercent,
+  FLYERS_STORAGE_KEY,
+  isOnOffer,
   adminCategories,
   CafeOrder,
   createAdminMenu,
@@ -33,6 +37,8 @@ import {
 } from "@/data/admin";
 import { Category } from "@/data/types";
 import {
+  flyerFromRow,
+  flyerToRow,
   hasSupabaseConfig,
   menuFromRow,
   menuToRow,
@@ -50,6 +56,7 @@ const navItems = [
   { id: "overview", label: "Overview", icon: "grid" },
   { id: "menu", label: "Menu items", icon: "plate" },
   { id: "orders", label: "Orders", icon: "receipt" },
+  { id: "offers", label: "Offers & combos", icon: "tag" },
   { id: "sales", label: "Sales & bills", icon: "chart" },
 ] as const;
 type AdminTab = (typeof navItems)[number]["id"];
@@ -63,6 +70,15 @@ type MenuForm = {
   ingredients: string;
   prepTime: string;
   special: boolean;
+  offer: boolean;
+  offerPrice: string;
+};
+
+type FlyerForm = {
+  title: string;
+  detail: string;
+  price: string;
+  image: string;
 };
 
 type NewOrderForm = {
@@ -133,6 +149,8 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
   };
+  if (name === "tag") return <svg {...common}><path d="M20.5 13.3 13.3 20.5a2 2 0 0 1-2.8 0l-7-7V4.5a1 1 0 0 1 1-1H13l7.5 7.5a2 2 0 0 1 0 2.8Z" /><circle cx="8" cy="8" r="1.4" /></svg>;
+  if (name === "upload") return <svg {...common}><path d="M12 16V4" /><path d="m7.5 8.5 4.5-4.5 4.5 4.5" /><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" /></svg>;
   if (name === "grid") return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>;
   if (name === "plate") return <svg {...common}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="5" /><path d="M3.5 5.5h3M17.5 5.5h3M4 18.5h2M18 18.5h2" /></svg>;
   if (name === "receipt") return <svg {...common}><path d="M5 3.5h14v17l-2.5-1.7-2.3 1.7-2.2-1.7-2.3 1.7-2.2-1.7L5 20.5v-17Z" /><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4" /></svg>;
@@ -242,7 +260,9 @@ export default function AdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<CafeOrder | null>(null);
   const [newOrderForm, setNewOrderForm] = useState<NewOrderForm>({ customer: "", contact: "", table: "", orderType: "Dine-in", payment: "Cash" });
   const [newOrderLines, setNewOrderLines] = useState<Record<string, number>>({});
-  const [menuForm, setMenuForm] = useState<MenuForm>({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false });
+  const [menuForm, setMenuForm] = useState<MenuForm>({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false, offer: false, offerPrice: "" });
+  const [flyers, setFlyers] = useState<ComboFlyer[]>([]);
+  const [flyerForm, setFlyerForm] = useState<FlyerForm>({ title: "", detail: "", price: "", image: "" });
   const [toast, setToast] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "offline">(hasSupabaseConfig ? "checking" : "offline");
   const toastTimer = useRef<number | null>(null);
@@ -265,6 +285,14 @@ export default function AdminPage() {
         const parsed = JSON.parse(savedOrders) as CafeOrder[];
         if (Array.isArray(parsed)) setOrders(parsed.map((order) => ({ ...order, orderType: order.orderType ?? "Dine-in" })));
       } catch { /* use the starter orders */ }
+    }
+
+    const savedFlyers = window.localStorage.getItem(FLYERS_STORAGE_KEY);
+    if (savedFlyers) {
+      try {
+        const parsed = JSON.parse(savedFlyers) as ComboFlyer[];
+        if (Array.isArray(parsed)) setFlyers(parsed);
+      } catch { /* ignore malformed flyer data */ }
     }
 
     if (!supabase) {
@@ -291,6 +319,10 @@ export default function AdminPage() {
         return;
       }
       if (menuResult.data?.length) setMenu(menuResult.data.map((row) => menuFromRow(row)));
+      try {
+        const flyerResult = await supabase.from("combo_flyers").select("*").order("created_at", { ascending: false });
+        if (!flyerResult.error && flyerResult.data?.length) setFlyers(flyerResult.data.map((row) => flyerFromRow(row)));
+      } catch { /* flyers are optional */ }
       if (orderResult.data?.length) setOrders(orderResult.data.map((row) => orderFromRow(row)));
       setConnectionStatus("connected");
     })();
@@ -304,6 +336,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (!checkingSession) window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
   }, [orders, checkingSession]);
+
+  useEffect(() => {
+    if (!checkingSession) window.localStorage.setItem(FLYERS_STORAGE_KEY, JSON.stringify(flyers));
+  }, [flyers, checkingSession]);
 
   useEffect(() => () => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
@@ -334,13 +370,13 @@ export default function AdminPage() {
 
   function openNewMenuItem() {
     setEditingItem(null);
-    setMenuForm({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false });
+    setMenuForm({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false, offer: false, offerPrice: "" });
     setMenuModalOpen(true);
   }
 
   function openEditMenuItem(item: AdminMenuItem) {
     setEditingItem(item);
-    setMenuForm({ name: item.name, category: item.category, price: String(item.price), image: item.image ?? "", description: item.description, ingredients: item.ingredients.join(", "), prepTime: item.prepTime, special: Boolean(item.special) });
+    setMenuForm({ name: item.name, category: item.category, price: String(item.price), image: item.image ?? "", description: item.description, ingredients: item.ingredients.join(", "), prepTime: item.prepTime, special: Boolean(item.special), offer: isOnOffer(item), offerPrice: item.offerPrice ? String(item.offerPrice) : "" });
     setMenuModalOpen(true);
   }
 
@@ -349,6 +385,11 @@ export default function AdminPage() {
     const price = Number(menuForm.price);
     if (!menuForm.name.trim() || !price || price < 0) {
       showToast("Add a name and a valid price first");
+      return;
+    }
+    const offerPrice = menuForm.offer ? Number(menuForm.offerPrice) : 0;
+    if (menuForm.offer && (!offerPrice || offerPrice <= 0 || offerPrice >= price)) {
+      showToast("Offer price must be above 0 and below the normal price");
       return;
     }
     const item: AdminMenuItem = {
@@ -361,6 +402,7 @@ export default function AdminPage() {
       prepTime: menuForm.prepTime.trim() || "15 Mins",
       description: menuForm.description.trim() || "A Cafe Umbrella favourite, prepared fresh to order.",
       special: menuForm.special,
+      offerPrice: menuForm.offer ? offerPrice : null,
       spiceLevel: editingItem?.spiceLevel ?? 1,
       active: editingItem?.active ?? true,
     };
@@ -403,6 +445,78 @@ export default function AdminPage() {
     const reader = new FileReader();
     reader.onload = () => setMenuForm((current) => ({ ...current, image: String(reader.result) }));
     reader.readAsDataURL(file);
+  }
+
+  function handleFlyerFile(file: File | undefined) {
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      showToast("Please upload a flyer under 3 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setFlyerForm((current) => ({ ...current, image: String(reader.result) }));
+    reader.readAsDataURL(file);
+  }
+
+  function saveFlyer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!flyerForm.title.trim()) {
+      showToast("Give the combo package a title");
+      return;
+    }
+    if (!flyerForm.image.trim()) {
+      showToast("Upload a flyer image or paste an image URL");
+      return;
+    }
+    const flyer: ComboFlyer = {
+      id: `flyer-${Date.now()}`,
+      title: flyerForm.title.trim(),
+      detail: flyerForm.detail.trim(),
+      image: flyerForm.image.trim(),
+      price: Number(flyerForm.price) > 0 ? Number(flyerForm.price) : null,
+      active: true,
+      createdAt: new Date().toISOString(),
+    };
+    setFlyers((current) => [flyer, ...current]);
+    setFlyerForm({ title: "", detail: "", price: "", image: "" });
+    if (supabase) {
+      void supabase.from("combo_flyers").upsert(flyerToRow(flyer)).then(({ error }) => {
+        if (error) showToast("Flyer saved on this device, but Supabase needs the combo_flyers table");
+      });
+    }
+    showToast("Combo flyer published to the offers panel");
+  }
+
+  function toggleFlyer(id: string) {
+    const current = flyers.find((flyer) => flyer.id === id);
+    if (!current) return;
+    const updated = { ...current, active: !current.active };
+    setFlyers((list) => list.map((flyer) => (flyer.id === id ? updated : flyer)));
+    if (supabase) {
+      void supabase.from("combo_flyers").upsert(flyerToRow(updated)).then(() => undefined);
+    }
+    showToast(updated.active ? "Flyer is live for guests" : "Flyer hidden from guests");
+  }
+
+  function removeFlyer(id: string) {
+    const flyer = flyers.find((entry) => entry.id === id);
+    if (!flyer || !window.confirm(`Remove the "${flyer.title}" flyer?`)) return;
+    setFlyers((list) => list.filter((entry) => entry.id !== id));
+    if (supabase) {
+      void supabase.from("combo_flyers").delete().eq("id", id).then(() => undefined);
+    }
+    showToast("Combo flyer removed");
+  }
+
+  function clearDishOffer(id: string) {
+    const item = menu.find((entry) => entry.id === id);
+    if (!item) return;
+    const updated = { ...item, offerPrice: null };
+    setMenu((current) => current.map((entry) => (entry.id === id ? updated : entry)));
+    if (supabase) {
+      void supabase.from("menu_items").upsert(menuToRow(updated)).then(() => undefined);
+    }
+    showToast(`Offer removed from ${item.name}`);
   }
 
   function updateOrderStatus(id: string, status: OrderStatus) {
@@ -472,6 +586,7 @@ export default function AdminPage() {
 
   const today = dateKey(new Date());
   const activeMenu = menu.filter((item) => item.active);
+  const offerItems = menu.filter((item) => isOnOffer(item));
   const todayOrders = orders.filter((order) => order.date === today && order.status !== "Cancelled");
   const todaySales = todayOrders.reduce((sum, order) => sum + order.total, 0);
   const pendingOrders = orders.filter((order) => order.status === "Preparing" || order.status === "Ready");
@@ -532,6 +647,7 @@ export default function AdminPage() {
             {activeTab === "overview" && <OverviewView todaySales={todaySales} todayOrders={todayOrders} pendingOrders={pendingOrders} averageOrder={averageOrder} sevenDayData={sevenDayData} maxSales={maxSales} topDishes={topDishes} orders={orders} onNavigate={setActiveTab} onSelectOrder={setSelectedOrder} onAddOrder={openOrderModal} />}
             {activeTab === "menu" && <MenuView menu={menu} filteredMenu={filteredMenu} search={menuSearch} category={menuCategory} onSearch={setMenuSearch} onCategory={setMenuCategory} onAdd={openNewMenuItem} onEdit={openEditMenuItem} onDelete={removeMenuItem} onToggle={toggleMenuItem} />}
             {activeTab === "orders" && <OrdersView orders={filteredOrders} allOrders={orders} search={orderSearch} filter={orderFilter} onSearch={setOrderSearch} onFilter={setOrderFilter} onStatus={updateOrderStatus} onSelect={setSelectedOrder} onAdd={openOrderModal} />}
+            {activeTab === "offers" && <OffersView offerItems={offerItems} flyers={flyers} form={flyerForm} onForm={setFlyerForm} onImage={handleFlyerFile} onSubmit={saveFlyer} onToggleFlyer={toggleFlyer} onRemoveFlyer={removeFlyer} onEditItem={openEditMenuItem} onClearOffer={clearDishOffer} onGoToMenu={() => setActiveTab("menu")} />}
             {activeTab === "sales" && <SalesView orders={orders} data={sevenDayData} maxSales={maxSales} onSelect={setSelectedOrder} />}
           </div>
         </main>
@@ -577,7 +693,7 @@ function MenuView({ menu, filteredMenu, search, category, onSearch, onCategory, 
 }
 
 function MenuItemCard({ item, onEdit, onDelete, onToggle }: { item: AdminMenuItem; onEdit: () => void; onDelete: () => void; onToggle: () => void }) {
-  return <div className={`group overflow-hidden rounded-2xl border bg-[#110a0c] transition hover:border-emerald-400/25 ${item.active ? "border-white/[0.08]" : "border-white/[0.05] opacity-65"}`}><div className="relative h-36 overflow-hidden bg-[#1b0d0b]"><MenuPhoto src={item.image} alt={item.name} /><div className="absolute inset-0 bg-gradient-to-t from-[#110a0c] via-transparent to-transparent" />{item.special && <span className="absolute left-3 top-3 rounded-full bg-emerald-400/90 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-[#03291b]">Special</span>}<span className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-[9px] font-semibold ${item.active ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300" : "border-white/10 bg-black/30 text-[#8dc389]"}`}>{item.active ? "Live" : "Hidden"}</span></div><div className="p-4"><p className="text-[10px] uppercase tracking-[0.15em] text-emerald-300/55">{item.category}</p><div className="mt-1 flex items-start justify-between gap-3"><h3 className="line-clamp-2 min-h-[2.5em] text-sm font-semibold leading-tight text-[#eafbe6]">{item.name}</h3><span className="shrink-0 text-sm font-bold text-emerald-300">{formatRupees(item.price)}</span></div><p className="mt-2 line-clamp-2 min-h-[2.5em] text-[11px] leading-relaxed text-[#6ba273]">{item.description}</p><div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3"><button type="button" onClick={onToggle} className="text-[11px] font-medium text-[#8dc389] hover:text-[#eafbe6]">{item.active ? "Hide item" : "Show item"}</button><div className="flex items-center gap-1"><button type="button" onClick={onEdit} className="admin-small-icon" aria-label={`Edit ${item.name}`}><Icon name="edit" size={14} /></button><button type="button" onClick={onDelete} className="admin-small-icon hover:border-red-400/30 hover:bg-red-400/10 hover:text-emerald-300" aria-label={`Remove ${item.name}`}><Icon name="trash" size={14} /></button></div></div></div></div>;
+  return <div className={`group overflow-hidden rounded-2xl border bg-[#110a0c] transition hover:border-emerald-400/25 ${item.active ? "border-white/[0.08]" : "border-white/[0.05] opacity-65"}`}><div className="relative h-36 overflow-hidden bg-[#1b0d0b]"><MenuPhoto src={item.image} alt={item.name} /><div className="absolute inset-0 bg-gradient-to-t from-[#110a0c] via-transparent to-transparent" />{item.special && <span className="absolute left-3 top-3 rounded-full bg-emerald-400/90 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-[#03291b]">Special</span>}{isOnOffer(item) && <span className="offer-ribbon absolute left-3 bottom-3 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wider">Offer −{discountPercent(item)}%</span>}<span className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-[9px] font-semibold ${item.active ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300" : "border-white/10 bg-black/30 text-[#8dc389]"}`}>{item.active ? "Live" : "Hidden"}</span></div><div className="p-4"><p className="text-[10px] uppercase tracking-[0.15em] text-emerald-300/55">{item.category}</p><div className="mt-1 flex items-start justify-between gap-3"><h3 className="line-clamp-2 min-h-[2.5em] text-sm font-semibold leading-tight text-[#eafbe6]">{item.name}</h3><span className="shrink-0 text-right text-sm font-bold text-emerald-300">{formatRupees(isOnOffer(item) ? Number(item.offerPrice) : item.price)}{isOnOffer(item) && <span className="mt-0.5 block text-[10px] font-normal text-[#6ba273] line-through">{formatRupees(item.price)}</span>}</span></div><p className="mt-2 line-clamp-2 min-h-[2.5em] text-[11px] leading-relaxed text-[#6ba273]">{item.description}</p><div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3"><button type="button" onClick={onToggle} className="text-[11px] font-medium text-[#8dc389] hover:text-[#eafbe6]">{item.active ? "Hide item" : "Show item"}</button><div className="flex items-center gap-1"><button type="button" onClick={onEdit} className="admin-small-icon" aria-label={`Edit ${item.name}`}><Icon name="edit" size={14} /></button><button type="button" onClick={onDelete} className="admin-small-icon hover:border-red-400/30 hover:bg-red-400/10 hover:text-emerald-300" aria-label={`Remove ${item.name}`}><Icon name="trash" size={14} /></button></div></div></div></div>;
 }
 
 function MenuPhoto({ src, alt }: { src: string | null; alt: string }) {
@@ -602,7 +718,7 @@ function SalesView({ orders, data, maxSales, onSelect }: { orders: CafeOrder[]; 
 }
 
 function MenuEditor({ form, editing, onChange, onImage, onSubmit, onClose }: { form: MenuForm; editing: boolean; onChange: (value: MenuForm) => void; onImage: (file: File | undefined) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
-  return <PanelModal title={editing ? "Edit food item" : "Add food item"} eyebrow="Menu management" onClose={onClose}><form onSubmit={onSubmit} className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-[#c7e9c0] sm:col-span-2">Food name<input required value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} className={inputClass} placeholder="e.g. Ella Valley Cheese Kottu" /></label><label className="block text-xs font-medium text-[#c7e9c0]">Category<select value={form.category} onChange={(event) => onChange({ ...form, category: event.target.value as Category })} className={inputClass}>{adminCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label><label className="block text-xs font-medium text-[#c7e9c0]">Price <span className="text-[#6ba273]">(LKR)</span><input required min="0" type="number" value={form.price} onChange={(event) => onChange({ ...form, price: event.target.value })} className={inputClass} placeholder="1450" /></label></div><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-[#c7e9c0]">Prep time<input value={form.prepTime} onChange={(event) => onChange({ ...form, prepTime: event.target.value })} className={inputClass} placeholder="15 Mins" /></label><label className="block text-xs font-medium text-[#c7e9c0]">Ingredients <span className="text-[#6ba273]">(comma separated)</span><input value={form.ingredients} onChange={(event) => onChange({ ...form, ingredients: event.target.value })} className={inputClass} placeholder="Chicken, cheese, leeks" /></label></div><label className="block text-xs font-medium text-[#c7e9c0]">Details<textarea value={form.description} onChange={(event) => onChange({ ...form, description: event.target.value })} className={textareaClass} placeholder="Tell guests what makes this dish special..." /></label><div><p className="text-xs font-medium text-[#c7e9c0]">Dish image</p><div className="mt-2 flex flex-col gap-3 sm:flex-row"><div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#02130d]">{form.image ? <img src={form.image} alt="Dish preview" className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-2xl opacity-40">🍽️</span>}</div><div className="flex min-w-0 flex-1 flex-col justify-center gap-2"><input type="file" accept="image/*" onChange={(event) => onImage(event.target.files?.[0])} className="block w-full text-xs text-[#8dc389] file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-400/10 file:px-3 file:py-2 file:text-[11px] file:font-medium file:text-emerald-200 hover:file:bg-emerald-400/20" /><input value={form.image.startsWith("data:") ? "" : form.image} onChange={(event) => onChange({ ...form, image: event.target.value })} className="h-9 w-full rounded-lg border border-white/10 bg-[#041912] px-3 text-[11px] text-[#eafbe6] outline-none placeholder:text-[#6ba273] focus:border-emerald-400/50" placeholder="Or paste an image URL" /></div></div></div><label className="flex cursor-pointer items-center gap-3 rounded-xl border border-emerald-400/15 bg-emerald-400/[0.05] px-3.5 py-3"><input type="checkbox" checked={form.special} onChange={(event) => onChange({ ...form, special: event.target.checked })} className="h-4 w-4 accent-emerald-500" /><span><span className="block text-xs font-medium text-[#eafbe6]">Mark as a special</span><span className="mt-0.5 block text-[11px] text-[#8dc389]">Show a special badge on the customer menu.</span></span></label><div className="flex justify-end gap-2.5 border-t border-white/[0.07] pt-5"><button type="button" onClick={onClose} className="admin-secondary-btn">Cancel</button><button type="submit" className="admin-primary-btn">{editing ? "Save changes" : "Add to menu"} <Icon name="arrow" size={15} /></button></div></form></PanelModal>;
+  return <PanelModal title={editing ? "Edit food item" : "Add food item"} eyebrow="Menu management" onClose={onClose}><form onSubmit={onSubmit} className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-[#c7e9c0] sm:col-span-2">Food name<input required value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} className={inputClass} placeholder="e.g. Ella Valley Cheese Kottu" /></label><label className="block text-xs font-medium text-[#c7e9c0]">Category<select value={form.category} onChange={(event) => onChange({ ...form, category: event.target.value as Category })} className={inputClass}>{adminCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label><label className="block text-xs font-medium text-[#c7e9c0]">Price <span className="text-[#6ba273]">(LKR)</span><input required min="0" type="number" value={form.price} onChange={(event) => onChange({ ...form, price: event.target.value })} className={inputClass} placeholder="1450" /></label></div><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-[#c7e9c0]">Prep time<input value={form.prepTime} onChange={(event) => onChange({ ...form, prepTime: event.target.value })} className={inputClass} placeholder="15 Mins" /></label><label className="block text-xs font-medium text-[#c7e9c0]">Ingredients <span className="text-[#6ba273]">(comma separated)</span><input value={form.ingredients} onChange={(event) => onChange({ ...form, ingredients: event.target.value })} className={inputClass} placeholder="Chicken, cheese, leeks" /></label></div><label className="block text-xs font-medium text-[#c7e9c0]">Details<textarea value={form.description} onChange={(event) => onChange({ ...form, description: event.target.value })} className={textareaClass} placeholder="Tell guests what makes this dish special..." /></label><div><p className="text-xs font-medium text-[#c7e9c0]">Dish image</p><div className="mt-2 flex flex-col gap-3 sm:flex-row"><div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#02130d]">{form.image ? <img src={form.image} alt="Dish preview" className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-2xl opacity-40">🍽️</span>}</div><div className="flex min-w-0 flex-1 flex-col justify-center gap-2"><input type="file" accept="image/*" onChange={(event) => onImage(event.target.files?.[0])} className="block w-full text-xs text-[#8dc389] file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-400/10 file:px-3 file:py-2 file:text-[11px] file:font-medium file:text-emerald-200 hover:file:bg-emerald-400/20" /><input value={form.image.startsWith("data:") ? "" : form.image} onChange={(event) => onChange({ ...form, image: event.target.value })} className="h-9 w-full rounded-lg border border-white/10 bg-[#041912] px-3 text-[11px] text-[#eafbe6] outline-none placeholder:text-[#6ba273] focus:border-emerald-400/50" placeholder="Or paste an image URL" /></div></div></div><div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.05] p-3.5"><label className="flex cursor-pointer items-center gap-3"><input type="checkbox" checked={form.offer} onChange={(event) => onChange({ ...form, offer: event.target.checked })} className="h-4 w-4 accent-emerald-500" /><span><span className="block text-xs font-medium text-[#eafbe6]">Mark as an offer</span><span className="mt-0.5 block text-[11px] text-[#8dc389]">Shows the dish in the floating Offers panel with a discount badge.</span></span></label>{form.offer && <label className="mt-3 block text-xs font-medium text-[#c7e9c0]">Offer price <span className="text-[#6ba273]">(LKR, must be lower than the normal price)</span><input type="number" min="0" value={form.offerPrice} onChange={(event) => onChange({ ...form, offerPrice: event.target.value })} className={inputClass} placeholder="1150" />{Number(form.price) > 0 && Number(form.offerPrice) > 0 && Number(form.offerPrice) < Number(form.price) && <span className="mt-2 inline-block rounded-full bg-[#39ff88]/15 px-2.5 py-1 text-[10px] font-bold text-[#7cf7b0]">Guests save {Math.round(((Number(form.price) - Number(form.offerPrice)) / Number(form.price)) * 100)}%</span>}</label>}</div><label className="flex cursor-pointer items-center gap-3 rounded-xl border border-emerald-400/15 bg-emerald-400/[0.05] px-3.5 py-3"><input type="checkbox" checked={form.special} onChange={(event) => onChange({ ...form, special: event.target.checked })} className="h-4 w-4 accent-emerald-500" /><span><span className="block text-xs font-medium text-[#eafbe6]">Mark as a special</span><span className="mt-0.5 block text-[11px] text-[#8dc389]">Show a special badge on the customer menu.</span></span></label><div className="flex justify-end gap-2.5 border-t border-white/[0.07] pt-5"><button type="button" onClick={onClose} className="admin-secondary-btn">Cancel</button><button type="submit" className="admin-primary-btn">{editing ? "Save changes" : "Add to menu"} <Icon name="arrow" size={15} /></button></div></form></PanelModal>;
 }
 
 function NewOrderModal({ menu, values, lines, onValues, onLines, onSubmit, onClose }: { menu: AdminMenuItem[]; values: NewOrderForm; lines: Record<string, number>; onValues: (value: NewOrderForm) => void; onLines: (value: Record<string, number>) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
@@ -722,4 +838,143 @@ function OrderDetail({ order, onClose, onStatus, onType }: { order: CafeOrder; o
   }
 
   return <PanelModal title={`Order #${order.id}`} eyebrow={`${orderDateLabel(order.date)} · ${order.time}`} onClose={onClose} wide><div className="space-y-5"><div className="flex flex-col justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300"><Icon name="user" /></span><div><p className="text-sm font-semibold text-[#eafbe6]">{order.customer}</p><p className="mt-1 text-xs text-[#8dc389]">{order.table ? `${order.table} · ` : ""}{order.payment} payment</p></div></div><div className="flex flex-wrap items-center justify-end gap-2"><select value={order.orderType} onChange={(event) => onType(order.id, event.target.value as OrderType)} className="h-9 rounded-full border border-white/10 bg-[#042017] px-3 text-[11px] font-medium text-[#c7e9c0] outline-none"><option value="Dine-in">Dine-in</option><option value="Takeaway">Takeaway</option><option value="Delivery">Delivery</option></select><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-9 rounded-full border bg-[#042017] px-3 text-[11px] font-medium outline-none ${statusStyles[order.status]}`}><option value="Preparing">Preparing</option><option value="Ready">Ready</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div></div><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-[#8dc389]"><Icon name="phone" size={14} /><span className="text-[10px] uppercase tracking-wider">Phone</span></div><p className="mt-2 text-xs text-[#eafbe6]">{order.contact}</p></div><div><p className="mb-2 text-xs font-medium text-[#c7e9c0]">Order items</p><div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-[#031711] px-3.5">{(order.items ?? []).map((item, index) => <div key={`${item.name}-${index}`} className="flex items-center justify-between py-3"><div><p className="text-xs text-[#c7e9c0]">{item.name}</p><p className="mt-1 text-[10px] text-[#6ba273]">{item.quantity} × {formatRupees(item.price)}</p></div><p className="text-xs font-semibold text-[#eafbe6]">{formatRupees(item.price * item.quantity)}</p></div>)}<div className="flex items-center justify-between py-4"><span className="text-xs font-medium text-[#8dc389]">Total</span><span className="font-display text-lg font-semibold text-emerald-300">{formatRupees(order.total)}</span></div></div></div><div className="flex flex-col gap-2.5 sm:flex-row"><button type="button" onClick={generateBill} className="admin-primary-btn flex-1 justify-center"><Icon name="receipt" size={15} /> Generate 58mm e-bill</button><button type="button" onClick={sendBillOnWhatsApp} className="admin-whatsapp-btn flex-1 justify-center"><Icon name="whatsapp" size={15} /> Send e-bill on WhatsApp</button></div><p className="text-center text-[10px] text-[#6ba273]">The e-bill opens as a 58mm receipt ready to print or save as PDF. WhatsApp opens with the bill message pre-filled — review and tap send on the customer&apos;s chat.</p></div></PanelModal>;
+}
+
+function OffersView({
+  offerItems,
+  flyers,
+  form,
+  onForm,
+  onImage,
+  onSubmit,
+  onToggleFlyer,
+  onRemoveFlyer,
+  onEditItem,
+  onClearOffer,
+  onGoToMenu,
+}: {
+  offerItems: AdminMenuItem[];
+  flyers: ComboFlyer[];
+  form: FlyerForm;
+  onForm: (value: FlyerForm) => void;
+  onImage: (file: File | undefined) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onToggleFlyer: (id: string) => void;
+  onRemoveFlyer: (id: string) => void;
+  onEditItem: (item: AdminMenuItem) => void;
+  onClearOffer: (id: string) => void;
+  onGoToMenu: () => void;
+}) {
+  const liveFlyers = flyers.filter((flyer) => flyer.active).length;
+  return (
+    <div className="space-y-7">
+      <PageHeading
+        eyebrow="Offers & combos"
+        title="Run your promotions"
+        detail={`${offerItems.length} dishes on offer · ${liveFlyers} combo flyer${liveFlyers === 1 ? "" : "s"} live on the guest menu`}
+        action={<button type="button" onClick={onGoToMenu} className="admin-secondary-btn"><Icon name="plate" size={16} /> Mark a dish</button>}
+      />
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_1.15fr]">
+        {/* Upload a combo flyer */}
+        <section className="admin-card p-5 sm:p-6">
+          <p className="text-sm font-semibold text-[#eafbe6]">Upload a combo package flyer</p>
+          <p className="mt-1 text-xs text-[#8dc389]">Guests see these at the top of the floating Offers panel.</p>
+          <form onSubmit={onSubmit} className="mt-5 space-y-4">
+            <label className="block text-xs font-medium text-[#c7e9c0]">Package title
+              <input required value={form.title} onChange={(event) => onForm({ ...form, title: event.target.value })} className={inputClass} placeholder="e.g. Kottu Family Combo" />
+            </label>
+            <label className="block text-xs font-medium text-[#c7e9c0]">Short detail <span className="text-[#6ba273]">(optional)</span>
+              <textarea value={form.detail} onChange={(event) => onForm({ ...form, detail: event.target.value })} className={textareaClass} placeholder="2 kottu + 2 drinks + dessert, valid all week." />
+            </label>
+            <label className="block text-xs font-medium text-[#c7e9c0]">Package price <span className="text-[#6ba273]">(optional, LKR)</span>
+              <input type="number" min="0" value={form.price} onChange={(event) => onForm({ ...form, price: event.target.value })} className={inputClass} placeholder="4500" />
+            </label>
+            <div>
+              <p className="text-xs font-medium text-[#c7e9c0]">Flyer artwork</p>
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#02130d]">
+                  {form.image ? <img src={form.image} alt="Flyer preview" className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-2xl opacity-40">🖼️</span>}
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+                  <input type="file" accept="image/*" onChange={(event) => onImage(event.target.files?.[0])} className="block w-full text-xs text-[#8dc389] file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-400/10 file:px-3 file:py-2 file:text-[11px] file:font-medium file:text-emerald-200 hover:file:bg-emerald-400/20" />
+                  <input value={form.image.startsWith("data:") ? "" : form.image} onChange={(event) => onForm({ ...form, image: event.target.value })} className="h-9 w-full rounded-lg border border-white/10 bg-[#041912] px-3 text-[11px] text-[#eafbe6] outline-none placeholder:text-[#5e9668] focus:border-emerald-400/50" placeholder="Or paste a flyer image URL" />
+                  <p className="text-[10px] text-[#6ba273]">PNG or JPG, under 3 MB. Portrait flyers look best.</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end border-t border-white/[0.07] pt-4">
+              <button type="submit" className="admin-primary-btn"><Icon name="upload" size={15} /> Publish flyer</button>
+            </div>
+          </form>
+        </section>
+
+        {/* Published flyers */}
+        <section className="admin-card overflow-hidden">
+          <div className="border-b border-white/[0.07] px-5 py-5 sm:px-6">
+            <p className="text-sm font-semibold text-[#eafbe6]">Published combo flyers</p>
+            <p className="mt-1 text-xs text-[#8dc389]">Hide a flyer to pull it from the guest menu without deleting it.</p>
+          </div>
+          {flyers.length ? (
+            <div className="grid gap-3 p-4 sm:grid-cols-2">
+              {flyers.map((flyer) => (
+                <div key={flyer.id} className={`overflow-hidden rounded-2xl border bg-[#031711] transition ${flyer.active ? "border-emerald-400/20" : "border-white/[0.06] opacity-60"}`}>
+                  <div className="relative h-40 overflow-hidden bg-[#02130d]">
+                    <img src={flyer.image} alt={flyer.title} className="h-full w-full object-cover" />
+                    <span className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-[9px] font-semibold ${flyer.active ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300" : "border-white/10 bg-black/40 text-[#8dc389]"}`}>{flyer.active ? "Live" : "Hidden"}</span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-[#eafbe6]">{flyer.title}</p>
+                    {flyer.detail && <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[#6ba273]">{flyer.detail}</p>}
+                    {typeof flyer.price === "number" && <p className="mt-2 text-sm font-bold text-emerald-300">{formatRupees(flyer.price)}</p>}
+                    <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                      <button type="button" onClick={() => onToggleFlyer(flyer.id)} className="text-[11px] font-medium text-[#8dc389] hover:text-[#eafbe6]">{flyer.active ? "Hide flyer" : "Show flyer"}</button>
+                      <button type="button" onClick={() => onRemoveFlyer(flyer.id)} className="admin-small-icon hover:border-red-400/30 hover:bg-red-400/10" aria-label={`Remove ${flyer.title}`}><Icon name="trash" size={14} /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4"><EmptyState title="No combo flyers yet" detail="Upload your first package artwork on the left." /></div>
+          )}
+        </section>
+      </div>
+
+      {/* Dishes currently marked as offers */}
+      <section className="admin-card overflow-hidden">
+        <div className="flex flex-col gap-3 border-b border-white/[0.07] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <p className="text-sm font-semibold text-[#eafbe6]">Dishes on offer</p>
+            <p className="mt-1 text-xs text-[#8dc389]">Open any dish from Menu items and tick “Mark as an offer” to add it here.</p>
+          </div>
+          <button type="button" onClick={onGoToMenu} className="admin-secondary-btn self-start sm:self-auto"><Icon name="plate" size={15} /> Go to menu</button>
+        </div>
+        {offerItems.length ? (
+          <div className="divide-y divide-white/[0.055]">
+            {offerItems.map((item) => (
+              <div key={item.id} className="flex flex-wrap items-center gap-3 px-5 py-4 sm:px-6">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300"><Icon name="tag" size={16} /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-[#eafbe6]">{item.name}</p>
+                  <p className="mt-1 text-[11px] text-[#6ba273]">{item.category} · {item.active ? "visible to guests" : "hidden from guests"}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-[#6ba273] line-through">{formatRupees(item.price)}</span>
+                  <span className="text-sm font-bold text-emerald-300">{formatRupees(Number(item.offerPrice))}</span>
+                  <span className="offer-ribbon rounded-full px-2 py-1 text-[10px] font-bold">−{discountPercent(item)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => onEditItem(item)} className="admin-small-icon" aria-label={`Edit ${item.name}`}><Icon name="edit" size={14} /></button>
+                  <button type="button" onClick={() => onClearOffer(item.id)} className="admin-secondary-btn h-8 px-2.5 text-[11px]">End offer</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-5"><EmptyState title="No dish offers running" detail="Mark a dish as an offer to show it in the floating Offers panel." /></div>
+        )}
+      </section>
+    </div>
+  );
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { AdminMenuItem, CafeOrder, OrderStatus, OrderType } from "@/data/admin";
+import { AdminMenuItem, CafeOrder, ComboFlyer, OrderStatus, OrderType } from "@/data/admin";
 
 // These are browser-safe Supabase values. Environment variables take priority
 // for local/hosted deployments; the public fallback also keeps a static GitHub
@@ -29,6 +29,17 @@ export type MenuRow = {
   special: boolean;
   spice_level: 1 | 2 | 3;
   active: boolean;
+  offer_price: number | null;
+};
+
+export type FlyerRow = {
+  id: string;
+  title: string;
+  detail: string;
+  image: string;
+  price: number | null;
+  active: boolean;
+  created_at: string;
 };
 
 export type OrderRow = {
@@ -58,6 +69,7 @@ export function menuToRow(item: AdminMenuItem): MenuRow {
     special: Boolean(item.special),
     spice_level: item.spiceLevel ?? 1,
     active: item.active,
+    offer_price: item.offerPrice ?? null,
   };
 }
 
@@ -74,6 +86,31 @@ export function menuFromRow(row: MenuRow): AdminMenuItem {
     special: row.special,
     spiceLevel: row.spice_level ?? 1,
     active: row.active,
+    offerPrice: row.offer_price === null || row.offer_price === undefined ? null : Number(row.offer_price),
+  };
+}
+
+export function flyerToRow(flyer: ComboFlyer): FlyerRow {
+  return {
+    id: flyer.id,
+    title: flyer.title,
+    detail: flyer.detail,
+    image: flyer.image,
+    price: flyer.price,
+    active: flyer.active,
+    created_at: flyer.createdAt,
+  };
+}
+
+export function flyerFromRow(row: FlyerRow): ComboFlyer {
+  return {
+    id: row.id,
+    title: row.title,
+    detail: row.detail ?? "",
+    image: row.image,
+    price: row.price === null || row.price === undefined ? null : Number(row.price),
+    active: row.active ?? true,
+    createdAt: row.created_at ?? new Date().toISOString(),
   };
 }
 
