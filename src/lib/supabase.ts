@@ -35,7 +35,6 @@ export type OrderRow = {
   id: string;
   customer: string;
   contact: string;
-  email: string | null;
   items: CafeOrder["items"];
   total: number;
   status: OrderStatus;
@@ -83,7 +82,6 @@ export function orderToRow(order: CafeOrder): OrderRow {
     id: order.id,
     customer: order.customer,
     contact: order.contact,
-    email: order.email ?? null,
     items: order.items,
     total: order.total,
     status: order.status,
@@ -100,7 +98,6 @@ export function orderFromRow(row: OrderRow): CafeOrder {
     id: row.id,
     customer: row.customer,
     contact: row.contact,
-    email: row.email ?? undefined,
     items: row.items ?? [],
     total: Number(row.total),
     status: row.status,
