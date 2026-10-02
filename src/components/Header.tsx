@@ -1,6 +1,6 @@
 "use client";
 
-import Logo from "./Logo";
+import Image from "next/image";
 
 export default function Header({
   cartCount,
@@ -13,7 +13,14 @@ export default function Header({
     <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070304]/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2.5">
-          <Logo className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-[0_0_10px_rgba(255,84,15,0.45)]" />
+          <Image
+            src="/logo/logo.png"
+            alt="Umbrella Art Cafe"
+            width={110}
+            height={100}
+            priority
+            className="h-8 w-auto drop-shadow-[0_0_10px_rgba(255,84,15,0.45)] sm:h-9"
+          />
           <div className="leading-tight">
             <p className="font-display text-[15px] font-bold tracking-wide text-white sm:text-lg">
               Cafe <span className="text-gradient-fire font-bold">Umbrella</span>

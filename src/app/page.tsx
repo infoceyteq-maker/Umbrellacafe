@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import CategoryTabs from "@/components/CategoryTabs";
@@ -63,6 +64,25 @@ export default function Home() {
       {/* Hero */}
       <section className="grain-bg relative overflow-hidden px-4 pb-8 pt-8 text-center sm:px-6 sm:pt-10">
         <FloatingBits variant="hero" />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 mx-auto mb-7 max-w-4xl overflow-hidden rounded-2xl border border-orange-400/20 shadow-[0_18px_50px_-18px_rgba(255,84,15,0.45)]"
+        >
+          <Image
+            src="/cover/cover.jpg"
+            alt="The Umbrella Ella — Roti &amp; Kottu Hub, overlooking the Ella valley"
+            width={2045}
+            height={534}
+            priority
+            sizes="(max-width: 896px) 100vw, 896px"
+            className="h-auto w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#070304] via-transparent to-transparent" />
+        </motion.div>
+
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
