@@ -30,6 +30,18 @@ Open http://localhost:3000.
 - `src/app/` — Next.js App Router entry (`layout.tsx`, `page.tsx`, `globals.css`).
 - `public/dishes/` — dish photography. `public/logo/` — brand logo assets.
 
+## Admin studio + Supabase
+
+The staff workspace is available at `/admin`. The current demo login is `admin` / `umbrella123`.
+
+The admin studio supports menu items, orders, customer phone/email details, order statuses, printable e-bills and seven-day sales summaries. It falls back to browser storage when Supabase is not configured, and syncs to Supabase when the project variables are present.
+
+1. Copy `.env.local` into the project root and add the Supabase project URL and publishable key from **Supabase Dashboard → Project Settings → API**.
+2. Run `supabase/schema.sql` once in **Supabase Dashboard → SQL Editor**.
+3. Restart the development server with `npm run dev`.
+
+Never commit `.env.local` or a `service_role` key. The included SQL policies are intentionally open for this demo; add Supabase Auth and restrict them before using the workspace in production.
+
 ## Notes
 
 - The dish photography is AI-generated to match the premium black/fire aesthetic.

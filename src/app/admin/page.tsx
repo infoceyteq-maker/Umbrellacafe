@@ -30,6 +30,14 @@ import {
   statusStyles,
 } from "@/data/admin";
 import { Category } from "@/data/types";
+import {
+  hasSupabaseConfig,
+  menuFromRow,
+  menuToRow,
+  orderFromRow,
+  orderToRow,
+  supabase,
+} from "@/lib/supabase";
 
 const inputClass =
   "mt-2 h-11 w-full rounded-xl border border-white/10 bg-[#100b0d] px-3.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-orange-400/60 focus:bg-[#160d0f] focus:ring-2 focus:ring-orange-400/10";
@@ -207,6 +215,7 @@ export default function AdminPage() {
   const [newOrderLines, setNewOrderLines] = useState<Record<string, number>>({});
   const [menuForm, setMenuForm] = useState<MenuForm>({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false });
   const [toast, setToast] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "offline">(hasSupabaseConfig ? "checking" : "offline");
   const toastTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -228,6 +237,26 @@ export default function AdminPage() {
         if (Array.isArray(parsed)) setOrders(parsed);
       } catch { /* use the starter orders */ }
     }
+
+    if (!supabase) {
+      setConnectionStatus("offline");
+      setCheckingSession(false);
+      return;
+    }
+
+    void (async () => {
+      const [menuResult, orderResult] = await Promise.all([
+        supabase.from("menu_items").select("*").order("created_at", { ascending: false }),
+        supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      ]);
+      if (menuResult.error || orderResult.error) {
+        setConnectionStatus("offline");
+        return;
+      }
+      if (menuResult.data?.length) setMenu(menuResult.data.map((row) => menuFromRow(row)));
+      if (orderResult.data?.length) setOrders(orderResult.data.map((row) => orderFromRow(row)));
+      setConnectionStatus("connected");
+    })();
     setCheckingSession(false);
   }, []);
 
@@ -295,6 +324,11 @@ export default function AdminPage() {
       active: editingItem?.active ?? true,
     };
     setMenu((current) => editingItem ? current.map((entry) => entry.id === editingItem.id ? item : entry) : [item, ...current]);
+    if (supabase) {
+      void supabase.from("menu_items").upsert(menuToRow(item)).then(({ error }) => {
+        if (error) showToast("Saved locally, but Supabase needs its tables created");
+      });
+    }
     setMenuModalOpen(false);
     showToast(editingItem ? "Menu item updated" : "New dish added to the menu");
   }
@@ -303,11 +337,24 @@ export default function AdminPage() {
     const item = menu.find((entry) => entry.id === id);
     if (!item || !window.confirm(`Remove ${item.name} from the menu?`)) return;
     setMenu((current) => current.filter((entry) => entry.id !== id));
+    if (supabase) {
+      void supabase.from("menu_items").delete().eq("id", id).then(({ error }) => {
+        if (error) showToast("Removed locally, but Supabase needs its tables created");
+      });
+    }
     showToast("Menu item removed");
   }
 
   function toggleMenuItem(id: string) {
-    setMenu((current) => current.map((item) => item.id === id ? { ...item, active: !item.active } : item));
+    const currentItem = menu.find((item) => item.id === id);
+    if (!currentItem) return;
+    const updatedItem = { ...currentItem, active: !currentItem.active };
+    setMenu((current) => current.map((item) => item.id === id ? updatedItem : item));
+    if (supabase) {
+      void supabase.from("menu_items").upsert(menuToRow(updatedItem)).then(({ error }) => {
+        if (error) showToast("Updated locally, but Supabase needs its tables created");
+      });
+    }
   }
 
   function handleImageFile(file: File | undefined) {
@@ -320,6 +367,11 @@ export default function AdminPage() {
   function updateOrderStatus(id: string, status: OrderStatus) {
     setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order));
     setSelectedOrder((current) => current?.id === id ? { ...current, status } : current);
+    if (supabase) {
+      void supabase.from("orders").update({ status }).eq("id", id).then(({ error }) => {
+        if (error) showToast("Updated locally, but Supabase needs its tables created");
+      });
+    }
     showToast(`Order #${id} marked ${status.toLowerCase()}`);
   }
 
@@ -342,7 +394,25 @@ export default function AdminPage() {
     }
     const newId = String(Math.max(...orders.map((order) => Number(order.id)), 1047) + 1);
     const now = new Date();
-    setOrders((current) => [{ id: newId, customer: newOrderForm.customer.trim(), contact: newOrderForm.contact.trim(), email: newOrderForm.email.trim() || undefined, items: lines, total: lines.reduce((sum, line) => sum + line.price * line.quantity, 0), status: "Preparing", payment: newOrderForm.payment, date: dateKey(now), time: now.toLocaleTimeString("en-LK", { hour: "2-digit", minute: "2-digit" }), table: newOrderForm.table.trim() || undefined }, ...current]);
+    const newOrder: CafeOrder = {
+      id: newId,
+      customer: newOrderForm.customer.trim(),
+      contact: newOrderForm.contact.trim(),
+      email: newOrderForm.email.trim() || undefined,
+      items: lines,
+      total: lines.reduce((sum, line) => sum + line.price * line.quantity, 0),
+      status: "Preparing",
+      payment: newOrderForm.payment,
+      date: dateKey(now),
+      time: now.toLocaleTimeString("en-LK", { hour: "2-digit", minute: "2-digit" }),
+      table: newOrderForm.table.trim() || undefined,
+    };
+    setOrders((current) => [newOrder, ...current]);
+    if (supabase) {
+      void supabase.from("orders").upsert(orderToRow(newOrder)).then(({ error }) => {
+        if (error) showToast("Saved locally, but Supabase needs its tables created");
+      });
+    }
     setOrderModalOpen(false);
     showToast(`Order #${newId} added successfully`);
   }
@@ -401,7 +471,7 @@ export default function AdminPage() {
         <header className="admin-topbar">
           <div className="flex items-center gap-3 lg:hidden"><Logo className="h-8 w-8" /><span className="font-display text-sm font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></span></div>
           <div className="hidden lg:block"><p className="text-xs text-zinc-500">Cafe Umbrella / <span className="text-zinc-300">{navItems.find((item) => item.id === activeTab)?.label}</span></p></div>
-          <div className="ml-auto flex items-center gap-2 sm:gap-4"><a href="/" target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:border-orange-400/30 hover:text-white sm:flex"><Icon name="eye" size={15} /> View site</a><button type="button" aria-label="Notifications" className="admin-icon-btn relative"><Icon name="bell" size={18} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-orange-400" /></button><div className="hidden h-7 w-px bg-white/10 sm:block" /><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 to-red-600 text-xs font-bold text-[#2e0904]">A</div><div className="hidden leading-tight sm:block"><p className="text-xs font-semibold text-white">Admin</p><p className="text-[10px] text-zinc-500">Manager</p></div><button type="button" onClick={logout} className="ml-1 text-zinc-500 hover:text-white lg:hidden" aria-label="Sign out"><Icon name="logout" size={16} /></button></div></div>
+          <div className="ml-auto flex items-center gap-2 sm:gap-4"><span className={`hidden items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-medium sm:flex ${connectionStatus === "connected" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : connectionStatus === "checking" ? "border-orange-400/20 bg-orange-400/10 text-orange-200" : "border-white/10 bg-white/[0.03] text-zinc-500"}`}><span className={`h-1.5 w-1.5 rounded-full ${connectionStatus === "connected" ? "bg-emerald-400" : connectionStatus === "checking" ? "animate-pulse bg-orange-400" : "bg-zinc-600"}`} />{connectionStatus === "connected" ? "Supabase connected" : connectionStatus === "checking" ? "Checking database" : hasSupabaseConfig ? "Run SQL setup" : "Local demo"}</span><a href="/" target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:border-orange-400/30 hover:text-white sm:flex"><Icon name="eye" size={15} /> View site</a><button type="button" aria-label="Notifications" className="admin-icon-btn relative"><Icon name="bell" size={18} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-orange-400" /></button><div className="hidden h-7 w-px bg-white/10 sm:block" /><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 to-red-600 text-xs font-bold text-[#2e0904]">A</div><div className="hidden leading-tight sm:block"><p className="text-xs font-semibold text-white">Admin</p><p className="text-[10px] text-zinc-500">Manager</p></div><button type="button" onClick={logout} className="ml-1 text-zinc-500 hover:text-white lg:hidden" aria-label="Sign out"><Icon name="logout" size={16} /></button></div></div>
         </header>
 
         <main className="admin-main">

@@ -14,6 +14,7 @@ import SocialBar from "@/components/SocialBar";
 import { categories, menuItems } from "@/data/menu";
 import { Category, MenuItem } from "@/data/types";
 import { MENU_STORAGE_KEY, AdminMenuItem } from "@/data/admin";
+import { menuFromRow, supabase } from "@/lib/supabase";
 
 export default function Home() {
   const [menu, setMenu] = useState<MenuItem[]>(menuItems);
@@ -32,6 +33,11 @@ export default function Home() {
       }
     } catch {
       // Keep the starter menu if the browser has an invalid saved value.
+    }
+    if (supabase) {
+      void supabase.from("menu_items").select("*").eq("active", true).order("created_at", { ascending: false }).then(({ data }) => {
+        if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
+      });
     }
   }, []);
   const [cart, setCart] = useState<Record<string, number>>({});
