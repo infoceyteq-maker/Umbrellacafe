@@ -160,6 +160,21 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
 }
 
+function useModalChrome(onClose: () => void) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+}
+
 function PanelModal({
   title,
   eyebrow,
@@ -173,6 +188,7 @@ function PanelModal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  useModalChrome(onClose);
   return (
     <div className="admin-modal fixed inset-0 z-[100] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-5" onMouseDown={onClose}>
       <div className={`admin-modal-panel max-h-[94vh] w-full overflow-y-auto rounded-t-[28px] border border-white/10 bg-[#140c0e] shadow-[0_28px_90px_rgba(0,0,0,0.65)] sm:rounded-[26px] ${wide ? "max-w-3xl" : "max-w-xl"}`} onMouseDown={(event) => event.stopPropagation()}>
@@ -497,7 +513,7 @@ export default function AdminPage() {
           <Image src="/logo/logo.png" alt="Umbrella Art Cafe" width={132} height={120} priority className="h-10 w-auto object-contain drop-shadow-[0_0_12px_rgba(45,214,198,0.18)]" />
           <div><p className="font-display text-[15px] font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></p><p className="mt-0.5 text-[9px] uppercase tracking-[0.3em] text-orange-300/55">Admin studio</p></div>
         </div>
-        <div className="px-4"><p className="admin-nav-label">Workspace</p><nav className="mt-3 space-y-1">{navItems.map((item) => <NavButton key={item.id} item={item} active={activeTab === item.id} onClick={() => setActiveTab(item.id)} />)}</nav></div>
+        <div className="px-4"><p className="admin-nav-label">Workspace</p><nav className="mt-3 space-y-1">{navItems.map((item) => <NavButton key={item.id} item={item} active={activeTab === item.id} badge={pendingOrders.length} onClick={() => setActiveTab(item.id)} />)}</nav></div>
         <div className="mt-auto px-5 pb-7">
           <div className="admin-side-tip"><span className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl bg-orange-400/15 text-orange-300"><Icon name="spark" size={16} /></span><p className="text-xs font-medium text-white">Keep the menu fresh</p><p className="mt-1 text-[11px] leading-relaxed text-zinc-500">Seasonal specials are a lovely way to bring guests back.</p><button type="button" onClick={openNewMenuItem} className="mt-3 text-[11px] font-semibold text-orange-300 hover:text-orange-200">Add a special <span className="ml-1">→</span></button></div>
           <button type="button" onClick={logout} className="mt-5 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs text-zinc-500 transition hover:bg-white/[0.04] hover:text-white"><Icon name="logout" size={16} /> Sign out</button>
@@ -534,8 +550,8 @@ function LoginScreen({ username, password, error, onUsername, onPassword, onSubm
   return <div className="admin-login-bg flex min-h-screen items-center justify-center overflow-hidden px-4 py-8"><div className="admin-login-orb admin-login-orb-one" /><div className="admin-login-orb admin-login-orb-two" /><div className="relative z-10 w-full max-w-[430px]"><div className="mb-8 text-center"><div className="mx-auto flex h-16 w-28 items-center justify-center rounded-[22px] border border-orange-300/25 bg-[#170b0d] px-3 shadow-[0_0_55px_rgba(255,84,15,0.17)]"><Image src="/logo/logo.png" alt="Umbrella Art Cafe" width={150} height={135} priority className="h-12 w-auto object-contain" /></div><p className="mt-5 font-display text-lg font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></p><p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-orange-300/55">Ella · admin studio</p></div><div className="rounded-[28px] border border-white/10 bg-[#130b0d]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-8"><p className="admin-eyebrow">Good to see you</p><h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white">Welcome back</h1><p className="mt-2 text-sm leading-relaxed text-zinc-500">Sign in to manage dishes, orders and daily sales.</p><form onSubmit={onSubmit} className="mt-7 space-y-4"><label className="block text-xs font-medium text-zinc-300">Username<input autoComplete="username" value={username} onChange={(event) => onUsername(event.target.value)} className={inputClass} placeholder="Enter username" /></label><label className="block text-xs font-medium text-zinc-300">Password<input autoComplete="current-password" type="password" value={password} onChange={(event) => onPassword(event.target.value)} className={inputClass} placeholder="Enter password" /></label>{error && <p className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-xs text-red-300">{error}</p>}<button type="submit" className="admin-primary-btn mt-2 w-full justify-center">Sign in <Icon name="arrow" size={16} /></button></form><div className="mt-6 border-t border-white/[0.07] pt-5"><p className="text-center text-[11px] text-zinc-600">Demo access · <span className="text-zinc-400">admin</span> / <span className="text-zinc-400">umbrella123</span></p></div></div><p className="mt-6 text-center text-[11px] text-zinc-600">Private workspace · Cafe Umbrella, Ella</p></div></div>;
 }
 
-function NavButton({ item, active, onClick, mobile = false }: { item: (typeof navItems)[number]; active: boolean; onClick: () => void; mobile?: boolean }) {
-  return <button type="button" onClick={onClick} className={`${mobile ? "admin-mobile-nav-item" : "admin-nav-item"} ${active ? "is-active" : ""}`}><Icon name={item.icon} size={mobile ? 17 : 18} /><span>{item.label}</span>{!mobile && item.id === "orders" && <span className="ml-auto rounded-full bg-orange-400/15 px-2 py-0.5 text-[10px] text-orange-300">3</span>}</button>;
+function NavButton({ item, active, onClick, mobile = false, badge = 0 }: { item: (typeof navItems)[number]; active: boolean; onClick: () => void; mobile?: boolean; badge?: number }) {
+  return <button type="button" onClick={onClick} className={`${mobile ? "admin-mobile-nav-item" : "admin-nav-item"} ${active ? "is-active" : ""}`}><Icon name={item.icon} size={mobile ? 17 : 18} /><span>{item.label}</span>{!mobile && item.id === "orders" && badge > 0 && <span className="ml-auto rounded-full bg-orange-400/15 px-2 py-0.5 text-[10px] text-orange-300">{badge}</span>}</button>;
 }
 
 function PageHeading({ eyebrow, title, detail, action }: { eyebrow: string; title: string; detail: string; action?: ReactNode }) {
@@ -612,7 +628,7 @@ function toWhatsAppDigits(raw: string): string {
 /** Plain-text 58mm-style bill, reused for the WhatsApp message. */
 function buildBillMessage(order: CafeOrder): string {
   const divider = "--------------------------------";
-  const itemLines = order.items.map((item) => `${item.quantity} x ${item.name} - ${formatRupees(item.price * item.quantity)}`);
+  const itemLines = (order.items ?? []).map((item) => `${item.quantity} x ${item.name} - ${formatRupees(item.price * item.quantity)}`);
   return [
     "CAFE UMBRELLA",
     "Ella, Sri Lanka",
@@ -640,7 +656,7 @@ function OrderDetail({ order, onClose, onStatus, onType }: { order: CafeOrder; o
       window.print();
       return;
     }
-    const itemRows = order.items
+    const itemRows = (order.items ?? [])
       .map(
         (item) =>
           `<div class="bill-row"><span class="bill-item-name">${escapeBillText(item.name)}</span><span class="bill-item-qty">x${item.quantity}</span><span class="bill-item-amount">${formatRupees(item.price * item.quantity)}</span></div>`
@@ -689,7 +705,13 @@ function OrderDetail({ order, onClose, onStatus, onType }: { order: CafeOrder; o
     </body></html>`);
     billWindow.document.close();
     billWindow.focus();
-    billWindow.print();
+    // Printing immediately after write can produce a blank sheet, so wait for layout.
+    const printBill = () => billWindow.print();
+    if (billWindow.document.readyState === "complete") {
+      billWindow.setTimeout(printBill, 250);
+    } else {
+      billWindow.addEventListener("load", () => billWindow.setTimeout(printBill, 150), { once: true });
+    }
   }
 
   function sendBillOnWhatsApp() {
@@ -699,5 +721,5 @@ function OrderDetail({ order, onClose, onStatus, onType }: { order: CafeOrder; o
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  return <PanelModal title={`Order #${order.id}`} eyebrow={`${orderDateLabel(order.date)} · ${order.time}`} onClose={onClose} wide><div className="space-y-5"><div className="flex flex-col justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-400/10 text-orange-300"><Icon name="user" /></span><div><p className="text-sm font-semibold text-white">{order.customer}</p><p className="mt-1 text-xs text-zinc-500">{order.table ? `${order.table} · ` : ""}{order.payment} payment</p></div></div><div className="flex flex-wrap items-center justify-end gap-2"><select value={order.orderType} onChange={(event) => onType(order.id, event.target.value as OrderType)} className="h-9 rounded-full border border-white/10 bg-[#130b0d] px-3 text-[11px] font-medium text-zinc-300 outline-none"><option value="Dine-in">Dine-in</option><option value="Takeaway">Takeaway</option><option value="Delivery">Delivery</option></select><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-9 rounded-full border bg-[#130b0d] px-3 text-[11px] font-medium outline-none ${statusStyles[order.status]}`}><option value="Preparing">Preparing</option><option value="Ready">Ready</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div></div><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-zinc-500"><Icon name="phone" size={14} /><span className="text-[10px] uppercase tracking-wider">Phone</span></div><p className="mt-2 text-xs text-white">{order.contact}</p></div><div><p className="mb-2 text-xs font-medium text-zinc-300">Order items</p><div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-[#10090b] px-3.5">{order.items.map((item) => <div key={item.name} className="flex items-center justify-between py-3"><div><p className="text-xs text-zinc-200">{item.name}</p><p className="mt-1 text-[10px] text-zinc-600">{item.quantity} × {formatRupees(item.price)}</p></div><p className="text-xs font-semibold text-white">{formatRupees(item.price * item.quantity)}</p></div>)}<div className="flex items-center justify-between py-4"><span className="text-xs font-medium text-zinc-500">Total</span><span className="font-display text-lg font-semibold text-orange-300">{formatRupees(order.total)}</span></div></div></div><div className="flex flex-col gap-2.5 sm:flex-row"><button type="button" onClick={generateBill} className="admin-primary-btn flex-1 justify-center"><Icon name="receipt" size={15} /> Generate 58mm e-bill</button><button type="button" onClick={sendBillOnWhatsApp} className="admin-whatsapp-btn flex-1 justify-center"><Icon name="whatsapp" size={15} /> Send e-bill on WhatsApp</button></div><p className="text-center text-[10px] text-zinc-600">The e-bill opens as a 58mm receipt ready to print or save as PDF. WhatsApp opens with the bill message pre-filled — review and tap send on the customer&apos;s chat.</p></div></PanelModal>;
+  return <PanelModal title={`Order #${order.id}`} eyebrow={`${orderDateLabel(order.date)} · ${order.time}`} onClose={onClose} wide><div className="space-y-5"><div className="flex flex-col justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-400/10 text-orange-300"><Icon name="user" /></span><div><p className="text-sm font-semibold text-white">{order.customer}</p><p className="mt-1 text-xs text-zinc-500">{order.table ? `${order.table} · ` : ""}{order.payment} payment</p></div></div><div className="flex flex-wrap items-center justify-end gap-2"><select value={order.orderType} onChange={(event) => onType(order.id, event.target.value as OrderType)} className="h-9 rounded-full border border-white/10 bg-[#130b0d] px-3 text-[11px] font-medium text-zinc-300 outline-none"><option value="Dine-in">Dine-in</option><option value="Takeaway">Takeaway</option><option value="Delivery">Delivery</option></select><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-9 rounded-full border bg-[#130b0d] px-3 text-[11px] font-medium outline-none ${statusStyles[order.status]}`}><option value="Preparing">Preparing</option><option value="Ready">Ready</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div></div><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-zinc-500"><Icon name="phone" size={14} /><span className="text-[10px] uppercase tracking-wider">Phone</span></div><p className="mt-2 text-xs text-white">{order.contact}</p></div><div><p className="mb-2 text-xs font-medium text-zinc-300">Order items</p><div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-[#10090b] px-3.5">{(order.items ?? []).map((item, index) => <div key={`${item.name}-${index}`} className="flex items-center justify-between py-3"><div><p className="text-xs text-zinc-200">{item.name}</p><p className="mt-1 text-[10px] text-zinc-600">{item.quantity} × {formatRupees(item.price)}</p></div><p className="text-xs font-semibold text-white">{formatRupees(item.price * item.quantity)}</p></div>)}<div className="flex items-center justify-between py-4"><span className="text-xs font-medium text-zinc-500">Total</span><span className="font-display text-lg font-semibold text-orange-300">{formatRupees(order.total)}</span></div></div></div><div className="flex flex-col gap-2.5 sm:flex-row"><button type="button" onClick={generateBill} className="admin-primary-btn flex-1 justify-center"><Icon name="receipt" size={15} /> Generate 58mm e-bill</button><button type="button" onClick={sendBillOnWhatsApp} className="admin-whatsapp-btn flex-1 justify-center"><Icon name="whatsapp" size={15} /> Send e-bill on WhatsApp</button></div><p className="text-center text-[10px] text-zinc-600">The e-bill opens as a 58mm receipt ready to print or save as PDF. WhatsApp opens with the bill message pre-filled — review and tap send on the customer&apos;s chat.</p></div></PanelModal>;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MenuItem } from "@/data/types";
 import DishImage from "./DishImage";
@@ -20,6 +21,21 @@ export default function DishModal({
   onClose: () => void;
   onOrder: (item: MenuItem) => void;
 }) {
+  // Escape closes the dish sheet; the page behind it stays put while open.
+  useEffect(() => {
+    if (!item) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [item, onClose]);
+
   return (
     <AnimatePresence>
       {item && (
@@ -93,7 +109,7 @@ export default function DishModal({
 
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <span className="text-gradient-fire font-display text-2xl font-extrabold sm:text-3xl">
-                  Rs. {item.price.toLocaleString("en-LK")}
+                  Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-zinc-300">
                   🕒 {item.prepTime}
@@ -114,7 +130,7 @@ export default function DishModal({
                   Ingredients
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {item.ingredients.map((ing) => (
+                  {(item.ingredients ?? []).map((ing) => (
                     <span
                       key={ing}
                       className="rounded-full border border-orange-400/15 bg-white/[0.03] px-3 py-1.5 text-xs text-zinc-300"
@@ -132,7 +148,7 @@ export default function DishModal({
                 onClick={() => onOrder(item)}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb347] via-[#ff540f] to-[#e6202e] py-3.5 text-sm font-bold uppercase tracking-wide text-[#2b0500] shadow-[0_10px_30px_-8px_rgba(230,32,46,0.7)] transition active:scale-[0.98] sm:text-base"
               >
-                Order Now — Rs. {item.price.toLocaleString("en-LK")}
+                Order Now — Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
               </button>
             </div>
           </motion.div>

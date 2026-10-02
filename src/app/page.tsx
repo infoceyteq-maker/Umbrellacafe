@@ -59,14 +59,19 @@ export default function Home() {
     [active, menu]
   );
 
-  const cartCount = useMemo(
-    () => Object.values(cart).reduce((a, b) => a + b, 0),
-    [cart]
-  );
   const cartItems = useMemo(
     () => menu.filter((m) => cart[m.id]),
     [cart, menu]
   );
+  // Dishes removed from the menu must not keep inflating the basket badge.
+  const cartCount = useMemo(
+    () => cartItems.reduce((total, item) => total + (cart[item.id] ?? 0), 0),
+    [cart, cartItems]
+  );
+
+  useEffect(() => () => {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+  }, []);
 
   useEffect(() => () => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);

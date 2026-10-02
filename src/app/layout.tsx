@@ -14,13 +14,19 @@ export const metadata: Metadata = {
   title: "Cafe Umbrella — Ella",
   description:
     "Cafe Umbrella, Ella. Soups, Stews, Kottu, Signature Roti & more — served with a touch of magic.",
+  openGraph: {
+    title: "Cafe Umbrella — Ella",
+    description:
+      "Soups, Stews, Kottu, Signature Roti & more, perched above the Ella valley.",
+    type: "website",
+    images: ["/cover/cover.jpg"],
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#070304",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

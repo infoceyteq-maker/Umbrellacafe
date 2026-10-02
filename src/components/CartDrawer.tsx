@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CafeOrder, dateKey, OrderType, orderTypes } from "@/data/admin";
 import { orderToRow, supabase } from "@/lib/supabase";
@@ -32,21 +32,40 @@ export default function CartDrawer({
   const [customerContact, setCustomerContact] = useState("");
   const [tableOrNote, setTableOrNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
+  const [sentOrder, setSentOrder] = useState<{ id: string; signature: string } | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
 
   const total = items.reduce((s, i) => s + i.price * (quantities[i.id] ?? 0), 0);
+  const cartSignature = items.map((item) => `${item.id}x${quantities[item.id] ?? 0}`).join("|");
 
-  function closeDrawer() {
+  // A new/edited basket is a new order, so the "already sent" lock lifts on its own.
+  const submittedOrderId = sentOrder && sentOrder.signature === cartSignature ? sentOrder.id : null;
+
+  const closeDrawer = useCallback(() => {
     setOrderError(null);
-    setSubmittedOrderId(null);
+    setSentOrder(null);
     setSubmitting(false);
     onClose();
-  }
+  }, [onClose]);
+
+  // Escape closes the drawer and the page behind it must not scroll.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeDrawer();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, closeDrawer]);
 
   function clearOrder() {
     setOrderError(null);
-    setSubmittedOrderId(null);
+    setSentOrder(null);
     onClear();
   }
 
@@ -89,7 +108,7 @@ export default function CartDrawer({
       if (error) {
         setOrderError("Order could not be sent. Please run the Supabase schema and try again.");
       } else {
-        setSubmittedOrderId(orderId);
+        setSentOrder({ id: orderId, signature: cartSignature });
       }
     } catch {
       setOrderError("We could not reach the kitchen. Please check your connection and try again.");
@@ -162,22 +181,22 @@ export default function CartDrawer({
                           {item.name}
                         </p>
                         <p className="text-xs text-orange-300/70">
-                          Rs. {(item.price * quantities[item.id]).toLocaleString("en-LK")}
+                          Rs. {(item.price * (quantities[item.id] ?? 0)).toLocaleString("en-LK")}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onSetQty(item.id, quantities[item.id] - 1)}
+                          onClick={() => onSetQty(item.id, (quantities[item.id] ?? 0) - 1)}
                           aria-label={`Remove one ${item.name}`}
                           className="flex h-7 w-7 items-center justify-center rounded-full border border-white/15 text-zinc-300 transition hover:border-orange-400/50 hover:text-orange-200"
                         >
                           −
                         </button>
                         <span className="w-6 text-center text-sm font-semibold text-white">
-                          {quantities[item.id]}
+                          {quantities[item.id] ?? 0}
                         </span>
                         <button
-                          onClick={() => onSetQty(item.id, quantities[item.id] + 1)}
+                          onClick={() => onSetQty(item.id, (quantities[item.id] ?? 0) + 1)}
                           aria-label={`Add one more ${item.name}`}
                           className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#ffb347] to-[#e6202e] text-sm font-bold text-[#2b0500] transition active:scale-95"
                         >

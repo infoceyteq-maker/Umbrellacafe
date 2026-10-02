@@ -108,7 +108,7 @@ export default function DishCard({
           </h3>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-gradient-fire font-display text-base font-bold sm:text-lg">
-              Rs. {item.price.toLocaleString("en-LK")}
+              Rs. {Number(item.price ?? 0).toLocaleString("en-LK")}
             </span>
             <span className="flex items-center gap-1 rounded-full bg-white/[0.04] px-2 py-1 text-[10px] text-zinc-400">
               🕒 {item.prepTime}
