@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CafeOrder, OrderType, orderTypes } from "@/data/admin";
+import { CafeOrder, dateKey, OrderType, orderTypes } from "@/data/admin";
 import { orderToRow, supabase } from "@/lib/supabase";
 import { MenuItem } from "@/data/types";
 
@@ -35,7 +35,7 @@ export default function CartDrawer({
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
 
-  const total = items.reduce((s, i) => s + i.price * quantities[i.id], 0);
+  const total = items.reduce((s, i) => s + i.price * (quantities[i.id] ?? 0), 0);
 
   function closeDrawer() {
     setOrderError(null);
@@ -72,25 +72,30 @@ export default function CartDrawer({
       contact: customerContact.trim(),
       items: items.map((item) => ({
         name: item.name,
-        quantity: quantities[item.id],
+        quantity: quantities[item.id] ?? 0,
         price: item.price,
       })),
       total,
       status: "Preparing",
       orderType,
       payment: "Cash",
-      date: now.toISOString().slice(0, 10),
+      date: dateKey(now),
       time: now.toLocaleTimeString("en-LK", { hour: "2-digit", minute: "2-digit" }),
       table: tableOrNote.trim() || undefined,
     };
 
-    const { error } = await supabase.from("orders").insert(orderToRow(order));
-    if (error) {
-      setOrderError("Order could not be sent. Please run the Supabase schema and try again.");
-    } else {
-      setSubmittedOrderId(orderId);
+    try {
+      const { error } = await supabase.from("orders").insert(orderToRow(order));
+      if (error) {
+        setOrderError("Order could not be sent. Please run the Supabase schema and try again.");
+      } else {
+        setSubmittedOrderId(orderId);
+      }
+    } catch {
+      setOrderError("We could not reach the kitchen. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   return (

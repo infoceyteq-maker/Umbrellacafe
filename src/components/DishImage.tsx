@@ -16,7 +16,12 @@ export default function DishImage({
   sizes?: string;
   priority?: boolean;
 }) {
-  const [failed, setFailed] = useState(!src);
+  const [failed, setFailed] = useState(false);
+
+  // Admin-added dishes can carry a pasted remote URL or a base64 data URL.
+  // next/image only handles local (/public) paths unless every host is
+  // configured, so anything else is rendered with a plain <img> instead.
+  const isOptimizable = Boolean(src && src.startsWith("/"));
 
   if (failed || !src) {
     return (
@@ -29,6 +34,19 @@ export default function DishImage({
           Photo coming soon
         </span>
       </div>
+    );
+  }
+
+  if (!isOptimizable) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        loading={priority ? "eager" : "lazy"}
+        onError={() => setFailed(true)}
+        className={`absolute inset-0 h-full w-full ${className}`}
+      />
     );
   }
 

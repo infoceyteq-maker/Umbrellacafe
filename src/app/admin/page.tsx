@@ -258,10 +258,18 @@ export default function AdminPage() {
     }
 
     void (async () => {
-      const [menuResult, orderResult] = await Promise.all([
-        supabase.from("menu_items").select("*").order("created_at", { ascending: false }),
-        supabase.from("orders").select("*").order("created_at", { ascending: false }),
-      ]);
+      let menuResult;
+      let orderResult;
+      try {
+        [menuResult, orderResult] = await Promise.all([
+          supabase.from("menu_items").select("*").order("created_at", { ascending: false }),
+          supabase.from("orders").select("*").order("created_at", { ascending: false }),
+        ]);
+      } catch {
+        // Network/CORS failures must not take the whole panel down.
+        setConnectionStatus("offline");
+        return;
+      }
       if (menuResult.error || orderResult.error) {
         setConnectionStatus("offline");
         return;
@@ -280,6 +288,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (!checkingSession) window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
   }, [orders, checkingSession]);
+
+  useEffect(() => () => {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+  }, []);
 
   function showToast(message: string) {
     setToast(message);
@@ -416,7 +428,8 @@ export default function AdminPage() {
       showToast("Add at least one dish to the order");
       return;
     }
-    const newId = String(Math.max(...orders.map((order) => Number(order.id)), 1047) + 1);
+    const numericIds = orders.map((order) => Number(order.id)).filter((value) => Number.isFinite(value));
+    const newId = String(Math.max(...numericIds, 1047) + 1);
     const now = new Date();
     const newOrder: CafeOrder = {
       id: newId,

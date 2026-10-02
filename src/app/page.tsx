@@ -35,9 +35,18 @@ export default function Home() {
       // Keep the starter menu if the browser has an invalid saved value.
     }
     if (supabase) {
-      void supabase.from("menu_items").select("*").eq("active", true).order("created_at", { ascending: false }).then(({ data }) => {
-        if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
-      });
+      void (async () => {
+        try {
+          const { data } = await supabase
+            .from("menu_items")
+            .select("*")
+            .eq("active", true)
+            .order("created_at", { ascending: false });
+          if (data?.length) setMenu(data.map((row) => menuFromRow(row)));
+        } catch {
+          // A dropped connection should leave the starter menu in place.
+        }
+      })();
     }
   }, []);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -58,6 +67,10 @@ export default function Home() {
     () => menu.filter((m) => cart[m.id]),
     [cart, menu]
   );
+
+  useEffect(() => () => {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+  }, []);
 
   function showToast(message: string) {
     setToast(message);
