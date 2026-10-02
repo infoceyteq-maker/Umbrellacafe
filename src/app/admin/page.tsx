@@ -68,7 +68,6 @@ type MenuForm = {
 type NewOrderForm = {
   customer: string;
   contact: string;
-  email: string;
   table: string;
   orderType: OrderType;
   payment: CafeOrder["payment"];
@@ -94,14 +93,14 @@ function seedOrders(): CafeOrder[] {
   const total = (lines: OrderLine[]) =>
     lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const records = [
-    { id: "1047", name: "Nimesha Perera", contact: "+94 77 428 1290", email: "nimesha.p@email.com", item: [line("legend-kottu", 1), line("coconut-sambol-roti", 1)], ago: 0, hour: 19, minute: 42, status: "Preparing" as OrderStatus, payment: "Cash" as const, table: "T-04" },
-    { id: "1046", name: "Daniel Cooper", contact: "+94 71 882 4018", email: "daniel.cooper@email.com", item: [line("grilled-fish-platter", 1), line("mushroom-cream-soup", 1)], ago: 0, hour: 18, minute: 58, status: "Ready" as OrderStatus, payment: "Card" as const, table: "T-02" },
-    { id: "1045", name: "Sahan Fernando", contact: "+94 76 221 9073", email: "", item: [line("pepper-chicken-mash", 2)], ago: 0, hour: 17, minute: 35, status: "Completed" as OrderStatus, payment: "Online" as const, table: "T-08" },
-    { id: "1044", name: "Amelia Wright", contact: "+94 75 154 3320", email: "amelia.wright@gmail.com", item: [line("seafood-kottu", 1), line("chicken-corn-soup", 2)], ago: 1, hour: 20, minute: 14, status: "Completed" as OrderStatus, payment: "Card" as const, table: "T-05" },
-    { id: "1043", name: "Kavindu Silva", contact: "+94 70 390 1122", email: "", item: [line("chicken-chopsey", 1), line("cheese-egg-roti", 2)], ago: 2, hour: 18, minute: 27, status: "Completed" as OrderStatus, payment: "Cash" as const, table: "T-01" },
-    { id: "1042", name: "Maya Patel", contact: "+94 72 611 4890", email: "maya.patel@inbox.com", item: [line("beef-stew", 1)], ago: 3, hour: 19, minute: 6, status: "Completed" as OrderStatus, payment: "Online" as const, table: "T-06" },
-    { id: "1041", name: "Tharushi Jayawardena", contact: "+94 78 044 8321", email: "", item: [line("spanish-omelette", 1), line("boiled-vegetables", 1)], ago: 5, hour: 17, minute: 42, status: "Completed" as OrderStatus, payment: "Cash" as const, table: "T-03" },
-    { id: "1040", name: "Oliver Brown", contact: "+94 71 302 5591", email: "oliver.brown@hello.com", item: [line("chicken-corn-soup", 1), line("coconut-sambol-roti", 1)], ago: 6, hour: 20, minute: 3, status: "Completed" as OrderStatus, payment: "Card" as const, table: "T-07" },
+    { id: "1047", name: "Nimesha Perera", contact: "+94 77 428 1290", item: [line("legend-kottu", 1), line("coconut-sambol-roti", 1)], ago: 0, hour: 19, minute: 42, status: "Preparing" as OrderStatus, payment: "Cash" as const, table: "T-04" },
+    { id: "1046", name: "Daniel Cooper", contact: "+94 71 882 4018", item: [line("grilled-fish-platter", 1), line("mushroom-cream-soup", 1)], ago: 0, hour: 18, minute: 58, status: "Ready" as OrderStatus, payment: "Card" as const, table: "T-02" },
+    { id: "1045", name: "Sahan Fernando", contact: "+94 76 221 9073", item: [line("pepper-chicken-mash", 2)], ago: 0, hour: 17, minute: 35, status: "Completed" as OrderStatus, payment: "Online" as const, table: "T-08" },
+    { id: "1044", name: "Amelia Wright", contact: "+94 75 154 3320", item: [line("seafood-kottu", 1), line("chicken-corn-soup", 2)], ago: 1, hour: 20, minute: 14, status: "Completed" as OrderStatus, payment: "Card" as const, table: "T-05" },
+    { id: "1043", name: "Kavindu Silva", contact: "+94 70 390 1122", item: [line("chicken-chopsey", 1), line("cheese-egg-roti", 2)], ago: 2, hour: 18, minute: 27, status: "Completed" as OrderStatus, payment: "Cash" as const, table: "T-01" },
+    { id: "1042", name: "Maya Patel", contact: "+94 72 611 4890", item: [line("beef-stew", 1)], ago: 3, hour: 19, minute: 6, status: "Completed" as OrderStatus, payment: "Online" as const, table: "T-06" },
+    { id: "1041", name: "Tharushi Jayawardena", contact: "+94 78 044 8321", item: [line("spanish-omelette", 1), line("boiled-vegetables", 1)], ago: 5, hour: 17, minute: 42, status: "Completed" as OrderStatus, payment: "Cash" as const, table: "T-03" },
+    { id: "1040", name: "Oliver Brown", contact: "+94 71 302 5591", item: [line("chicken-corn-soup", 1), line("coconut-sambol-roti", 1)], ago: 6, hour: 20, minute: 3, status: "Completed" as OrderStatus, payment: "Card" as const, table: "T-07" },
   ];
 
   return records.map((record) => {
@@ -110,7 +109,6 @@ function seedOrders(): CafeOrder[] {
       id: record.id,
       customer: record.name,
       contact: record.contact,
-      email: record.email || undefined,
       items: record.item,
       total: total(record.item),
       status: record.status,
@@ -158,6 +156,7 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   if (name === "user") return <svg {...common}><circle cx="12" cy="8" r="3.3" /><path d="M5 20c.8-3.3 3-5 7-5s6.2 1.7 7 5" /></svg>;
   if (name === "check") return <svg {...common}><path d="m5 12 4.3 4.3L19 6.7" /></svg>;
   if (name === "spark") return <svg {...common}><path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3ZM19 16l.6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16Z" /></svg>;
+  if (name === "whatsapp") return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.33 4.96L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.92 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.8 14.08c-.24.68-1.4 1.32-1.93 1.4-.49.08-1.11.11-1.79-.11a16.6 16.6 0 0 1-1.62-.6c-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.73-2.08.99-2.37c.26-.28.57-.35.76-.35h.55c.18.01.41-.07.64.49.24.57.81 1.98.88 2.12.07.14.12.3.02.49-.09.19-.14.3-.28.46-.14.16-.29.36-.42.48-.14.13-.28.27-.12.54.16.27.71 1.17 1.52 1.89 1.05.94 1.93 1.23 2.2 1.37.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.54.73 1.8.86.26.13.43.19.5.3.07.11.07.63-.17 1.31Z" /></svg>;
   return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
 }
 
@@ -225,7 +224,7 @@ export default function AdminPage() {
   const [editingItem, setEditingItem] = useState<AdminMenuItem | null>(null);
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<CafeOrder | null>(null);
-  const [newOrderForm, setNewOrderForm] = useState<NewOrderForm>({ customer: "", contact: "", email: "", table: "", orderType: "Dine-in", payment: "Cash" });
+  const [newOrderForm, setNewOrderForm] = useState<NewOrderForm>({ customer: "", contact: "", table: "", orderType: "Dine-in", payment: "Cash" });
   const [newOrderLines, setNewOrderLines] = useState<Record<string, number>>({});
   const [menuForm, setMenuForm] = useState<MenuForm>({ name: "", category: categories[0], price: "", image: "", description: "", ingredients: "", prepTime: "15 Mins", special: false });
   const [toast, setToast] = useState<string | null>(null);
@@ -401,7 +400,7 @@ export default function AdminPage() {
   }
 
   function openOrderModal() {
-    setNewOrderForm({ customer: "", contact: "", email: "", table: "", orderType: "Dine-in", payment: "Cash" });
+    setNewOrderForm({ customer: "", contact: "", table: "", orderType: "Dine-in", payment: "Cash" });
     setNewOrderLines(activeMenu[0] ? { [activeMenu[0].id]: 1 } : {});
     setOrderModalOpen(true);
   }
@@ -423,7 +422,6 @@ export default function AdminPage() {
       id: newId,
       customer: newOrderForm.customer.trim(),
       contact: newOrderForm.contact.trim(),
-      email: newOrderForm.email.trim() || undefined,
       items: lines,
       total: lines.reduce((sum, line) => sum + line.price * line.quantity, 0),
       status: "Preparing",
@@ -559,11 +557,11 @@ function MenuPhoto({ src, alt }: { src: string | null; alt: string }) {
 }
 
 function OrdersView({ orders, allOrders, search, filter, onSearch, onFilter, onStatus, onSelect, onAdd }: { orders: CafeOrder[]; allOrders: CafeOrder[]; search: string; filter: "All" | OrderStatus; onSearch: (value: string) => void; onFilter: (value: "All" | OrderStatus) => void; onStatus: (id: string, status: OrderStatus) => void; onSelect: (order: CafeOrder) => void; onAdd: () => void }) {
-  return <div className="space-y-7"><PageHeading eyebrow="Order desk" title="Orders & customers" detail={`${allOrders.filter((order) => order.status === "Preparing").length} orders are being prepared · add a phone number or email to send an e-bill`} action={<button type="button" onClick={onAdd} className="admin-primary-btn"><Icon name="plus" size={16} /> Add customer order</button>} /><div className="admin-card overflow-hidden"><div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 sm:flex-row sm:items-center sm:p-5"><div className="relative min-w-0 flex-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600"><Icon name="search" size={16} /></span><input value={search} onChange={(event) => onSearch(event.target.value)} className="h-10 w-full rounded-xl border border-white/10 bg-[#0f090b] pl-9 pr-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" placeholder="Search order, customer or phone..." /></div><div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">{["All", ...orderStatuses].map((status) => <button type="button" key={status} onClick={() => onFilter(status as "All" | OrderStatus)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-[11px] font-medium transition ${filter === status ? "bg-orange-400/15 text-orange-200" : "text-zinc-500 hover:bg-white/[0.04] hover:text-white"}`}>{status}</button>)}</div></div>{orders.length ? <div className="divide-y divide-white/[0.055]"><div className="hidden grid-cols-[1.05fr_1.5fr_1fr_0.9fr_1fr_24px] items-center gap-4 bg-white/[0.015] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600 md:grid"><span>Order</span><span>Customer</span><span>Items</span><span>Status</span><span className="text-right">Total</span><span /></div>{orders.map((order) => <OrderTableRow key={order.id} order={order} onStatus={onStatus} onSelect={() => onSelect(order)} />)}</div> : <div className="p-4"><EmptyState title="No matching orders" detail="Try changing the search or status filter." /></div>}</div></div>;
+  return <div className="space-y-7"><PageHeading eyebrow="Order desk" title="Orders & customers" detail={`${allOrders.filter((order) => order.status === "Preparing").length} orders are being prepared · add a phone number to send a 58mm e-bill on WhatsApp`} action={<button type="button" onClick={onAdd} className="admin-primary-btn"><Icon name="plus" size={16} /> Add customer order</button>} /><div className="admin-card overflow-hidden"><div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 sm:flex-row sm:items-center sm:p-5"><div className="relative min-w-0 flex-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600"><Icon name="search" size={16} /></span><input value={search} onChange={(event) => onSearch(event.target.value)} className="h-10 w-full rounded-xl border border-white/10 bg-[#0f090b] pl-9 pr-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" placeholder="Search order, customer or phone..." /></div><div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">{["All", ...orderStatuses].map((status) => <button type="button" key={status} onClick={() => onFilter(status as "All" | OrderStatus)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-[11px] font-medium transition ${filter === status ? "bg-orange-400/15 text-orange-200" : "text-zinc-500 hover:bg-white/[0.04] hover:text-white"}`}>{status}</button>)}</div></div>{orders.length ? <div className="divide-y divide-white/[0.055]"><div className="hidden grid-cols-[1.05fr_1.5fr_1fr_0.9fr_1fr_24px] items-center gap-4 bg-white/[0.015] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600 md:grid"><span>Order</span><span>Customer</span><span>Items</span><span>Status</span><span className="text-right">Total</span><span /></div>{orders.map((order) => <OrderTableRow key={order.id} order={order} onStatus={onStatus} onSelect={() => onSelect(order)} />)}</div> : <div className="p-4"><EmptyState title="No matching orders" detail="Try changing the search or status filter." /></div>}</div></div>;
 }
 
 function OrderTableRow({ order, onStatus, onSelect }: { order: CafeOrder; onStatus: (id: string, status: OrderStatus) => void; onSelect: () => void }) {
-  return <div className="grid gap-3 px-5 py-4 transition hover:bg-white/[0.025] md:grid-cols-[1.05fr_1.5fr_1fr_0.9fr_1fr_24px] md:items-center md:gap-4"><button type="button" onClick={onSelect} className="flex items-center gap-3 text-left"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-400/10 text-[10px] font-bold text-orange-300">#{order.id.slice(-2)}</span><span><span className="block text-xs font-semibold text-white">#{order.id}</span><span className="mt-0.5 block text-[10px] text-zinc-600">{order.date === dateKey(new Date()) ? "Today" : orderDateLabel(order.date)} · {order.time}</span></span></button><button type="button" onClick={onSelect} className="flex min-w-0 items-center gap-2 text-left"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400"><Icon name="user" size={14} /></span><span className="min-w-0"><span className="block truncate text-xs font-medium text-zinc-200">{order.customer}</span><span className="mt-0.5 block truncate text-[10px] text-zinc-600">{order.contact}{order.email ? ` · ${order.email}` : ""}</span></span></button><div className="flex items-center gap-2"><p className="truncate text-xs text-zinc-500">{order.items.reduce((sum, item) => sum + item.quantity, 0)} items <span className="text-zinc-700">·</span> {order.items[0]?.name}</p><OrderTypeBadge type={order.orderType} /></div><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-8 w-fit min-w-[108px] rounded-full border bg-transparent px-2.5 text-[10px] font-medium outline-none ${statusStyles[order.status]}`}><option className="bg-[#140c0e]" value="Preparing">Preparing</option><option className="bg-[#140c0e]" value="Ready">Ready</option><option className="bg-[#140c0e]" value="Completed">Completed</option><option className="bg-[#140c0e]" value="Cancelled">Cancelled</option></select><p className="text-right text-sm font-semibold text-white">{formatRupees(order.total)}</p><button type="button" onClick={onSelect} className="hidden text-zinc-600 hover:text-white md:block"><Icon name="chevron" size={15} /></button><div className="flex items-center justify-between border-t border-white/[0.06] pt-2 md:hidden"><span className="flex items-center gap-2 text-[10px] text-zinc-600">{order.payment}{order.table ? ` · ${order.table}` : ""}<OrderTypeBadge type={order.orderType} /></span><button type="button" onClick={onSelect} className="text-[11px] font-medium text-orange-300">View order →</button></div></div>;
+  return <div className="grid gap-3 px-5 py-4 transition hover:bg-white/[0.025] md:grid-cols-[1.05fr_1.5fr_1fr_0.9fr_1fr_24px] md:items-center md:gap-4"><button type="button" onClick={onSelect} className="flex items-center gap-3 text-left"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-400/10 text-[10px] font-bold text-orange-300">#{order.id.slice(-2)}</span><span><span className="block text-xs font-semibold text-white">#{order.id}</span><span className="mt-0.5 block text-[10px] text-zinc-600">{order.date === dateKey(new Date()) ? "Today" : orderDateLabel(order.date)} · {order.time}</span></span></button><button type="button" onClick={onSelect} className="flex min-w-0 items-center gap-2 text-left"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400"><Icon name="user" size={14} /></span><span className="min-w-0"><span className="block truncate text-xs font-medium text-zinc-200">{order.customer}</span><span className="mt-0.5 block truncate text-[10px] text-zinc-600">{order.contact}</span></span></button><div className="flex items-center gap-2"><p className="truncate text-xs text-zinc-500">{order.items.reduce((sum, item) => sum + item.quantity, 0)} items <span className="text-zinc-700">·</span> {order.items[0]?.name}</p><OrderTypeBadge type={order.orderType} /></div><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-8 w-fit min-w-[108px] rounded-full border bg-transparent px-2.5 text-[10px] font-medium outline-none ${statusStyles[order.status]}`}><option className="bg-[#140c0e]" value="Preparing">Preparing</option><option className="bg-[#140c0e]" value="Ready">Ready</option><option className="bg-[#140c0e]" value="Completed">Completed</option><option className="bg-[#140c0e]" value="Cancelled">Cancelled</option></select><p className="text-right text-sm font-semibold text-white">{formatRupees(order.total)}</p><button type="button" onClick={onSelect} className="hidden text-zinc-600 hover:text-white md:block"><Icon name="chevron" size={15} /></button><div className="flex items-center justify-between border-t border-white/[0.06] pt-2 md:hidden"><span className="flex items-center gap-2 text-[10px] text-zinc-600">{order.payment}{order.table ? ` · ${order.table}` : ""}<OrderTypeBadge type={order.orderType} /></span><button type="button" onClick={onSelect} className="text-[11px] font-medium text-orange-300">View order →</button></div></div>;
 }
 
 function SalesView({ orders, data, maxSales, onSelect }: { orders: CafeOrder[]; data: { key: string; total: number; label: string; day: number }[]; maxSales: number; onSelect: (order: CafeOrder) => void }) {
@@ -580,7 +578,7 @@ function MenuEditor({ form, editing, onChange, onImage, onSubmit, onClose }: { f
 
 function NewOrderModal({ menu, values, lines, onValues, onLines, onSubmit, onClose }: { menu: AdminMenuItem[]; values: NewOrderForm; lines: Record<string, number>; onValues: (value: NewOrderForm) => void; onLines: (value: Record<string, number>) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const total = menu.reduce((sum, item) => sum + item.price * (lines[item.id] ?? 0), 0);
-  return <PanelModal title="Add customer order" eyebrow="New order" onClose={onClose} wide><form onSubmit={onSubmit} className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-zinc-300">Customer name<input required value={values.customer} onChange={(event) => onValues({ ...values, customer: event.target.value })} className={inputClass} placeholder="e.g. Nimesha Perera" /></label><label className="block text-xs font-medium text-zinc-300">Phone number<input required value={values.contact} onChange={(event) => onValues({ ...values, contact: event.target.value })} className={inputClass} placeholder="+94 77 123 4567" /></label><label className="block text-xs font-medium text-zinc-300">Email <span className="text-zinc-600">(optional)</span><input type="email" value={values.email} onChange={(event) => onValues({ ...values, email: event.target.value })} className={inputClass} placeholder="customer@email.com" /></label><label className="block text-xs font-medium text-zinc-300">Table / reference <span className="text-zinc-600">(optional)</span><input value={values.table} onChange={(event) => onValues({ ...values, table: event.target.value })} className={inputClass} placeholder="T-04" /></label><label className="block text-xs font-medium text-zinc-300">Order type<select value={values.orderType} onChange={(event) => onValues({ ...values, orderType: event.target.value as OrderType })} className={inputClass}>{orderTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div><div><div className="mb-2 flex items-center justify-between"><p className="text-xs font-medium text-zinc-300">Select dishes</p><p className="text-xs font-semibold text-orange-300">{formatRupees(total)}</p></div><div className="max-h-56 divide-y divide-white/[0.06] overflow-y-auto rounded-xl border border-white/10 bg-[#10090b]">{menu.map((item) => <div key={item.id} className="flex items-center gap-3 px-3.5 py-3"><div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-zinc-200">{item.name}</p><p className="mt-0.5 text-[10px] text-zinc-600">{formatRupees(item.price)}</p></div><div className="flex items-center gap-2"><button type="button" onClick={() => onLines({ ...lines, [item.id]: Math.max(0, (lines[item.id] ?? 0) - 1) })} className="admin-qty-btn">−</button><span className="w-5 text-center text-xs text-white">{lines[item.id] ?? 0}</span><button type="button" onClick={() => onLines({ ...lines, [item.id]: (lines[item.id] ?? 0) + 1 })} className="admin-qty-btn">+</button></div></div>)}</div></div><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-zinc-300">Payment method<select value={values.payment} onChange={(event) => onValues({ ...values, payment: event.target.value as NewOrderForm["payment"] })} className={inputClass}><option>Cash</option><option>Card</option><option>Online</option></select></label><div className="flex items-end"><p className="rounded-xl border border-orange-400/15 bg-orange-400/[0.05] px-3.5 py-3 text-[11px] leading-relaxed text-orange-200/70">An e-bill will be ready as soon as this order is saved.</p></div></div><div className="flex justify-end gap-2.5 border-t border-white/[0.07] pt-5"><button type="button" onClick={onClose} className="admin-secondary-btn">Cancel</button><button type="submit" className="admin-primary-btn">Save order <Icon name="arrow" size={15} /></button></div></form></PanelModal>;
+  return <PanelModal title="Add customer order" eyebrow="New order" onClose={onClose} wide><form onSubmit={onSubmit} className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-zinc-300">Customer name<input required value={values.customer} onChange={(event) => onValues({ ...values, customer: event.target.value })} className={inputClass} placeholder="e.g. Nimesha Perera" /></label><label className="block text-xs font-medium text-zinc-300">Phone number<input required value={values.contact} onChange={(event) => onValues({ ...values, contact: event.target.value })} className={inputClass} placeholder="+94 77 123 4567" /></label><label className="block text-xs font-medium text-zinc-300">Table / reference <span className="text-zinc-600">(optional)</span><input value={values.table} onChange={(event) => onValues({ ...values, table: event.target.value })} className={inputClass} placeholder="T-04" /></label><label className="block text-xs font-medium text-zinc-300">Order type<select value={values.orderType} onChange={(event) => onValues({ ...values, orderType: event.target.value as OrderType })} className={inputClass}>{orderTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div><div><div className="mb-2 flex items-center justify-between"><p className="text-xs font-medium text-zinc-300">Select dishes</p><p className="text-xs font-semibold text-orange-300">{formatRupees(total)}</p></div><div className="max-h-56 divide-y divide-white/[0.06] overflow-y-auto rounded-xl border border-white/10 bg-[#10090b]">{menu.map((item) => <div key={item.id} className="flex items-center gap-3 px-3.5 py-3"><div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-zinc-200">{item.name}</p><p className="mt-0.5 text-[10px] text-zinc-600">{formatRupees(item.price)}</p></div><div className="flex items-center gap-2"><button type="button" onClick={() => onLines({ ...lines, [item.id]: Math.max(0, (lines[item.id] ?? 0) - 1) })} className="admin-qty-btn">−</button><span className="w-5 text-center text-xs text-white">{lines[item.id] ?? 0}</span><button type="button" onClick={() => onLines({ ...lines, [item.id]: (lines[item.id] ?? 0) + 1 })} className="admin-qty-btn">+</button></div></div>)}</div></div><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-medium text-zinc-300">Payment method<select value={values.payment} onChange={(event) => onValues({ ...values, payment: event.target.value as NewOrderForm["payment"] })} className={inputClass}><option>Cash</option><option>Card</option><option>Online</option></select></label><div className="flex items-end"><p className="rounded-xl border border-orange-400/15 bg-orange-400/[0.05] px-3.5 py-3 text-[11px] leading-relaxed text-orange-200/70">A 58mm e-bill will be ready to generate or send on WhatsApp as soon as this order is saved.</p></div></div><div className="flex justify-end gap-2.5 border-t border-white/[0.07] pt-5"><button type="button" onClick={onClose} className="admin-secondary-btn">Cancel</button><button type="submit" className="admin-primary-btn">Save order <Icon name="arrow" size={15} /></button></div></form></PanelModal>;
 }
 
 function escapeBillText(value: string): string {
@@ -588,20 +586,105 @@ function escapeBillText(value: string): string {
   return value.replace(/[&<>\"']/g, (character) => entities[character] ?? character);
 }
 
+/** Normalises a Sri Lankan phone number into the digits-only format wa.me expects. */
+function toWhatsAppDigits(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("94")) return digits;
+  if (digits.startsWith("0")) return `94${digits.slice(1)}`;
+  if (digits.length === 9) return `94${digits}`;
+  return digits;
+}
+
+/** Plain-text 58mm-style bill, reused for the WhatsApp message. */
+function buildBillMessage(order: CafeOrder): string {
+  const divider = "--------------------------------";
+  const itemLines = order.items.map((item) => `${item.quantity} x ${item.name} - ${formatRupees(item.price * item.quantity)}`);
+  return [
+    "CAFE UMBRELLA",
+    "Ella, Sri Lanka",
+    divider,
+    `Order #: ${order.id}`,
+    `Date: ${orderDateLabel(order.date)}`,
+    `Time: ${order.time}`,
+    `Customer: ${order.customer}`,
+    `Phone: ${order.contact}`,
+    divider,
+    ...itemLines,
+    divider,
+    `Total: ${formatRupees(order.total)}`,
+    `Payment: ${order.payment}`,
+    divider,
+    "Thank you for dining with",
+    "Cafe Umbrella.",
+  ].join("\n");
+}
+
 function OrderDetail({ order, onClose, onStatus, onType }: { order: CafeOrder; onClose: () => void; onStatus: (id: string, status: OrderStatus) => void; onType: (id: string, orderType: OrderType) => void }) {
-  function printBill() {
-    const billWindow = window.open("", "_blank", "width=720,height=820");
+  function generateBill() {
+    const billWindow = window.open("", "_blank", "width=380,height=680");
     if (!billWindow) {
       window.print();
       return;
     }
-    const lineMarkup = order.items.map((item) => `<tr><td>${item.quantity} × ${escapeBillText(item.name)}</td><td>${formatRupees(item.price * item.quantity)}</td></tr>`).join("");
-    billWindow.document.write(`<!doctype html><html><head><title>Cafe Umbrella · E-bill #${escapeBillText(order.id)}</title><style>body{margin:0;padding:42px;font-family:Arial,sans-serif;color:#28120e;background:#fff}main{max-width:590px;margin:auto;border:1px solid #ecd8ca;padding:34px}header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #f18a45;padding-bottom:22px}h1{font-size:24px;margin:0;color:#9f291d}h2{font-size:16px;margin:0 0 5px}p{font-size:12px;color:#806d66;margin:6px 0}table{width:100%;border-collapse:collapse;margin-top:30px;font-size:13px}td{padding:12px 0;border-bottom:1px solid #f1e5df}td:last-child{text-align:right;font-weight:bold}.total{display:flex;justify-content:space-between;margin-top:22px;font-size:18px;font-weight:bold;color:#9f291d}.customer{margin-top:25px;padding:14px;background:#fff8f3}.footer{text-align:center;margin-top:30px;font-size:11px;color:#a18c84}@media print{body{padding:0}main{border:0}}</style></head><body><main><header><div><h1>Cafe Umbrella</h1><p>Ella · Roti &amp; Kottu Hub</p></div><div style="text-align:right"><h2>E-BILL #${escapeBillText(order.id)}</h2><p>${escapeBillText(orderDateLabel(order.date))} · ${escapeBillText(order.time)}</p></div></header><div class="customer"><strong>${escapeBillText(order.customer)}</strong><p>${escapeBillText(order.contact)}${order.email ? ` · ${escapeBillText(order.email)}` : ""}${order.table ? ` · ${escapeBillText(order.table)}` : ""}</p></div><table>${lineMarkup}</table><div class="total"><span>Total</span><span>${formatRupees(order.total)}</span></div><p style="margin-top:14px">Payment: ${escapeBillText(order.payment)} · Status: ${escapeBillText(order.status)}</p><div class="footer">Thank you for dining with us · Passara Road, Ella<br/>Made with fire in the hills</div></main></body></html>`);
+    const itemRows = order.items
+      .map(
+        (item) =>
+          `<div class="bill-row"><span class="bill-item-name">${escapeBillText(item.name)}</span><span class="bill-item-qty">x${item.quantity}</span><span class="bill-item-amount">${formatRupees(item.price * item.quantity)}</span></div>`
+      )
+      .join("");
+    billWindow.document.write(`<!doctype html><html><head><title>Cafe Umbrella · E-bill #${escapeBillText(order.id)}</title><style>
+      @page { size: 58mm auto; margin: 0; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 14px 0; background: #e9e9e9; display: flex; justify-content: center; font-family: "Courier New", Courier, monospace; }
+      .bill { width: 58mm; padding: 3mm 3mm 8mm; background: #fff; color: #000; }
+      .center { text-align: center; }
+      h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: 1px; }
+      .tagline { font-size: 9px; margin: 0 0 4px; }
+      .divider { border-top: 1px dashed #000; margin: 6px 0; }
+      .meta p { font-size: 10px; margin: 2px 0; word-break: break-word; }
+      .bill-row { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; margin: 3px 0; }
+      .bill-item-name { flex: 1; word-break: break-word; }
+      .bill-item-qty { width: 22px; text-align: center; flex-shrink: 0; }
+      .bill-item-amount { width: 64px; text-align: right; flex-shrink: 0; }
+      .total-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-top: 4px; }
+      .payment-row { font-size: 10px; margin-top: 4px; }
+      .footer { font-size: 10px; text-align: center; margin-top: 10px; line-height: 1.5; }
+      @media print { body { background: #fff; padding: 0; } }
+    </style></head><body>
+      <div class="bill">
+        <div class="center">
+          <h1>CAFE UMBRELLA</h1>
+          <p class="tagline">Ella, Sri Lanka</p>
+        </div>
+        <div class="divider"></div>
+        <div class="meta">
+          <p>Order #: ${escapeBillText(order.id)}</p>
+          <p>Date: ${escapeBillText(orderDateLabel(order.date))}</p>
+          <p>Time: ${escapeBillText(order.time)}</p>
+          <p>Customer: ${escapeBillText(order.customer)}</p>
+          <p>Phone: ${escapeBillText(order.contact)}</p>
+        </div>
+        <div class="divider"></div>
+        ${itemRows}
+        <div class="divider"></div>
+        <div class="total-row"><span>TOTAL</span><span>${formatRupees(order.total)}</span></div>
+        <p class="payment-row">Payment: ${escapeBillText(order.payment)}</p>
+        <div class="divider"></div>
+        <div class="footer">Thank you for dining with<br/>Cafe Umbrella.</div>
+      </div>
+    </body></html>`);
     billWindow.document.close();
     billWindow.focus();
     billWindow.print();
-    billWindow.close();
   }
 
-  return <PanelModal title={`Order #${order.id}`} eyebrow={`${orderDateLabel(order.date)} · ${order.time}`} onClose={onClose} wide><div className="space-y-5"><div className="flex flex-col justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-400/10 text-orange-300"><Icon name="user" /></span><div><p className="text-sm font-semibold text-white">{order.customer}</p><p className="mt-1 text-xs text-zinc-500">{order.table ? `${order.table} · ` : ""}{order.payment} payment</p></div></div><div className="flex flex-wrap items-center justify-end gap-2"><select value={order.orderType} onChange={(event) => onType(order.id, event.target.value as OrderType)} className="h-9 rounded-full border border-white/10 bg-[#130b0d] px-3 text-[11px] font-medium text-zinc-300 outline-none"><option value="Dine-in">Dine-in</option><option value="Takeaway">Takeaway</option><option value="Delivery">Delivery</option></select><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-9 rounded-full border bg-[#130b0d] px-3 text-[11px] font-medium outline-none ${statusStyles[order.status]}`}><option value="Preparing">Preparing</option><option value="Ready">Ready</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-zinc-500"><Icon name="phone" size={14} /><span className="text-[10px] uppercase tracking-wider">Phone</span></div><p className="mt-2 text-xs text-white">{order.contact}</p></div><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-zinc-500"><Icon name="mail" size={14} /><span className="text-[10px] uppercase tracking-wider">Email</span></div><p className="mt-2 truncate text-xs text-white">{order.email || "Not provided"}</p></div></div><div><p className="mb-2 text-xs font-medium text-zinc-300">Order items</p><div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-[#10090b] px-3.5">{order.items.map((item) => <div key={item.name} className="flex items-center justify-between py-3"><div><p className="text-xs text-zinc-200">{item.name}</p><p className="mt-1 text-[10px] text-zinc-600">{item.quantity} × {formatRupees(item.price)}</p></div><p className="text-xs font-semibold text-white">{formatRupees(item.price * item.quantity)}</p></div>)}<div className="flex items-center justify-between py-4"><span className="text-xs font-medium text-zinc-500">Total</span><span className="font-display text-lg font-semibold text-orange-300">{formatRupees(order.total)}</span></div></div></div><div className="flex flex-col gap-2.5 sm:flex-row"><button type="button" onClick={printBill} className="admin-secondary-btn flex-1 justify-center"><Icon name="print" size={15} /> Print / save e-bill</button><button type="button" onClick={printBill} className="admin-primary-btn flex-1 justify-center"><Icon name="download" size={15} /> Generate e-bill</button></div><p className="text-center text-[10px] text-zinc-600">A clean invoice opens in a new window. Choose “Save as PDF” in the print dialog.</p></div></PanelModal>;
+  function sendBillOnWhatsApp() {
+    const digits = toWhatsAppDigits(order.contact);
+    const message = encodeURIComponent(buildBillMessage(order));
+    const url = digits ? `https://wa.me/${digits}?text=${message}` : `https://wa.me/?text=${message}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  return <PanelModal title={`Order #${order.id}`} eyebrow={`${orderDateLabel(order.date)} · ${order.time}`} onClose={onClose} wide><div className="space-y-5"><div className="flex flex-col justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-400/10 text-orange-300"><Icon name="user" /></span><div><p className="text-sm font-semibold text-white">{order.customer}</p><p className="mt-1 text-xs text-zinc-500">{order.table ? `${order.table} · ` : ""}{order.payment} payment</p></div></div><div className="flex flex-wrap items-center justify-end gap-2"><select value={order.orderType} onChange={(event) => onType(order.id, event.target.value as OrderType)} className="h-9 rounded-full border border-white/10 bg-[#130b0d] px-3 text-[11px] font-medium text-zinc-300 outline-none"><option value="Dine-in">Dine-in</option><option value="Takeaway">Takeaway</option><option value="Delivery">Delivery</option></select><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value as OrderStatus)} className={`h-9 rounded-full border bg-[#130b0d] px-3 text-[11px] font-medium outline-none ${statusStyles[order.status]}`}><option value="Preparing">Preparing</option><option value="Ready">Ready</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></div></div><div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-3"><div className="flex items-center gap-2 text-zinc-500"><Icon name="phone" size={14} /><span className="text-[10px] uppercase tracking-wider">Phone</span></div><p className="mt-2 text-xs text-white">{order.contact}</p></div><div><p className="mb-2 text-xs font-medium text-zinc-300">Order items</p><div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-[#10090b] px-3.5">{order.items.map((item) => <div key={item.name} className="flex items-center justify-between py-3"><div><p className="text-xs text-zinc-200">{item.name}</p><p className="mt-1 text-[10px] text-zinc-600">{item.quantity} × {formatRupees(item.price)}</p></div><p className="text-xs font-semibold text-white">{formatRupees(item.price * item.quantity)}</p></div>)}<div className="flex items-center justify-between py-4"><span className="text-xs font-medium text-zinc-500">Total</span><span className="font-display text-lg font-semibold text-orange-300">{formatRupees(order.total)}</span></div></div></div><div className="flex flex-col gap-2.5 sm:flex-row"><button type="button" onClick={generateBill} className="admin-primary-btn flex-1 justify-center"><Icon name="receipt" size={15} /> Generate 58mm e-bill</button><button type="button" onClick={sendBillOnWhatsApp} className="admin-whatsapp-btn flex-1 justify-center"><Icon name="whatsapp" size={15} /> Send e-bill on WhatsApp</button></div><p className="text-center text-[10px] text-zinc-600">The e-bill opens as a 58mm receipt ready to print or save as PDF. WhatsApp opens with the bill message pre-filled — review and tap send on the customer&apos;s chat.</p></div></PanelModal>;
 }

@@ -30,7 +30,6 @@ export default function CartDrawer({
   const [orderType, setOrderType] = useState<OrderType>("Dine-in");
   const [customerName, setCustomerName] = useState("");
   const [customerContact, setCustomerContact] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
   const [tableOrNote, setTableOrNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
@@ -71,7 +70,6 @@ export default function CartDrawer({
       id: orderId,
       customer: customerName.trim(),
       contact: customerContact.trim(),
-      email: customerEmail.trim() || undefined,
       items: items.map((item) => ({
         name: item.name,
         quantity: quantities[item.id],
@@ -221,8 +219,7 @@ export default function CartDrawer({
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <input value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Your name *" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
                     <input value={customerContact} onChange={(event) => setCustomerContact(event.target.value)} placeholder="Phone number *" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
-                    <input type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} placeholder="Email (optional)" className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
-                    <input value={tableOrNote} onChange={(event) => setTableOrNote(event.target.value)} placeholder={orderType === "Dine-in" ? "Table number" : orderType === "Delivery" ? "Delivery note" : "Pickup note"} className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50" />
+                    <input value={tableOrNote} onChange={(event) => setTableOrNote(event.target.value)} placeholder={orderType === "Dine-in" ? "Table number" : orderType === "Delivery" ? "Delivery note" : "Pickup note"} className="h-10 rounded-xl border border-white/10 bg-[#100506] px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-orange-400/50 sm:col-span-2" />
                   </div>
                   {orderError && <p className="mt-2 rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2 text-[10px] leading-relaxed text-red-300">{orderError}</p>}
                   {submittedOrderId && <p className="mt-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[10px] leading-relaxed text-emerald-300">Order sent to Cafe Umbrella. The team can now see it in the admin order desk.</p>}

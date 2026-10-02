@@ -23,7 +23,6 @@ export interface CafeOrder {
   id: string;
   customer: string;
   contact: string;
-  email?: string;
   items: OrderLine[];
   total: number;
   status: OrderStatus;
