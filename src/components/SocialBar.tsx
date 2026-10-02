@@ -12,13 +12,13 @@ export default function SocialBar() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.12 }}
-      className="relative z-10 -mt-3 mb-6 flex flex-col items-center gap-3"
+      className="relative z-10 mt-2 mb-6 flex flex-col items-center gap-3"
     >
-      {/* Cafe name */}
-      <p className="font-display text-sm font-bold uppercase tracking-[0.3em] text-white sm:text-base">
-        Cafe <span className="text-gradient-fire">Umbrella</span>
-        <span className="text-orange-300/70"> — Ella</span>
-      </p>
+      {/* Cafe name — main heading */}
+      <h1 className="font-display text-center text-3xl font-extrabold leading-tight tracking-tight drop-shadow-[0_0_28px_rgba(255,84,15,0.45)] sm:text-5xl">
+        <span className="text-gradient-fire">Cafe Umbrella</span>
+        <span className="text-white"> — Ella</span>
+      </h1>
 
       {/* Icon row: Facebook · Instagram · Location */}
       <div className="flex items-center gap-3">

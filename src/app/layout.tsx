@@ -9,9 +9,9 @@ import "@fontsource/poppins/800.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cafe Umbrella Ella — Digital Menu",
+  title: "Cafe Umbrella — Ella",
   description:
-    "A premium digital menu for Cafe Umbrella, Ella. Soups, Stews, Kottu, Signature Roti & more — served with a touch of magic.",
+    "Cafe Umbrella, Ella. Soups, Stews, Kottu, Signature Roti & more — served with a touch of magic.",
 };
 
 export const viewport: Viewport = {

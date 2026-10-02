@@ -84,9 +84,6 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#070304] via-transparent to-transparent" />
         </motion.div>
 
-        {/* Facebook · Instagram · Location + contact details */}
-        <SocialBar />
-
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -95,14 +92,10 @@ export default function Home() {
         >
           Perched above the Ella Valley
         </motion.p>
-        <motion.h1
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.05 }}
-          className="font-display relative z-10 mt-2 text-3xl font-extrabold leading-tight text-white sm:text-4xl"
-        >
-          The <span className="text-gradient-fire">Digital Menu</span>
-        </motion.h1>
+
+        {/* Facebook · Instagram · Location + contact details */}
+        <SocialBar />
+
         <motion.p
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
