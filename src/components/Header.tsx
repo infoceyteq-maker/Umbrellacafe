@@ -26,7 +26,7 @@ export default function Header({
               Cafe <span className="text-gradient-fire font-bold">Umbrella</span>
             </p>
             <p className="-mt-0.5 text-[9px] font-medium uppercase tracking-[0.35em] text-orange-300/70 sm:text-[10px]">
-              Ella · Digital Menu
+              Ella
             </p>
           </div>
         </div>

@@ -9,7 +9,7 @@
  */
 export const CAFE = {
   name: "Cafe Umbrella",
-  tagline: "Ella · Digital Menu",
+  tagline: "Ella",
   location: "Ella, Sri Lanka",
   address: "Passara Road, 3rd Mile, Ella, Uva Province 90090",
   whatsappNumber: "94712054801",
