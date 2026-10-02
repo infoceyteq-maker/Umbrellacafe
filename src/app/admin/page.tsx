@@ -160,6 +160,82 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
 }
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
+function InstallAdminButton({ compact = false }: { compact?: boolean }) {
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || standaloneNavigator.standalone === true;
+    const iosDevice = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      setInstalled(true);
+      setInstallPrompt(null);
+      setShowHelp(false);
+    };
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInstalled(isStandalone);
+    setIsIos(iosDevice);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  if (installed) return null;
+
+  async function installAdminShortcut() {
+    if (!installPrompt) {
+      setShowHelp((current) => !current);
+      return;
+    }
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") setInstalled(true);
+    setInstallPrompt(null);
+  }
+
+  return (
+    <div className={`admin-install-wrap ${compact ? "is-compact" : ""}`}>
+      <button type="button" onClick={() => void installAdminShortcut()} className="admin-install-btn" aria-expanded={showHelp}>
+        <Icon name="download" size={compact ? 15 : 16} />
+        <span>{compact ? "Download" : "Download admin shortcut"}</span>
+      </button>
+      {showHelp && (
+        <div className="admin-install-help" role="dialog" aria-label="Install the admin shortcut">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-white">Add Admin to your home screen</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">
+                {isIos
+                  ? "In Safari, tap Share, then choose Add to Home Screen."
+                  : "Open your browser menu and choose Install app or Add to Home screen."}
+              </p>
+            </div>
+            <button type="button" onClick={() => setShowHelp(false)} className="admin-install-close" aria-label="Close install instructions">
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PanelModal({
   title,
   eyebrow,
@@ -230,6 +306,12 @@ export default function AdminPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "offline">(hasSupabaseConfig ? "checking" : "offline");
   const toastTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { scope: "/admin/" }).catch(() => undefined);
+    }
+  }, []);
 
   useEffect(() => {
     const session = window.localStorage.getItem(ADMIN_SESSION_KEY);
@@ -495,7 +577,7 @@ export default function AdminPage() {
         <header className="admin-topbar">
           <div className="flex items-center gap-3 lg:hidden"><Image src="/logo/logo.png" alt="Umbrella Art Cafe" width={106} height={96} priority className="h-8 w-auto object-contain" /><span className="font-display text-sm font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></span></div>
           <div className="hidden lg:block"><p className="text-xs text-zinc-500">Cafe Umbrella / <span className="text-zinc-300">{navItems.find((item) => item.id === activeTab)?.label}</span></p></div>
-          <div className="ml-auto flex items-center gap-2 sm:gap-4"><span className={`hidden items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-medium sm:flex ${connectionStatus === "connected" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : connectionStatus === "checking" ? "border-orange-400/20 bg-orange-400/10 text-orange-200" : "border-white/10 bg-white/[0.03] text-zinc-500"}`}><span className={`h-1.5 w-1.5 rounded-full ${connectionStatus === "connected" ? "bg-emerald-400" : connectionStatus === "checking" ? "animate-pulse bg-orange-400" : "bg-zinc-600"}`} />{connectionStatus === "connected" ? "Supabase connected" : connectionStatus === "checking" ? "Checking database" : hasSupabaseConfig ? "Run SQL setup" : "Local demo"}</span><a href="/" target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:border-orange-400/30 hover:text-white sm:flex"><Icon name="eye" size={15} /> View site</a><button type="button" aria-label="Notifications" className="admin-icon-btn relative"><Icon name="bell" size={18} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-orange-400" /></button><div className="hidden h-7 w-px bg-white/10 sm:block" /><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 to-red-600 text-xs font-bold text-[#2e0904]">A</div><div className="hidden leading-tight sm:block"><p className="text-xs font-semibold text-white">Admin</p><p className="text-[10px] text-zinc-500">Manager</p></div><button type="button" onClick={logout} className="ml-1 text-zinc-500 hover:text-white lg:hidden" aria-label="Sign out"><Icon name="logout" size={16} /></button></div></div>
+          <div className="ml-auto flex items-center gap-2 sm:gap-4"><span className={`hidden items-center gap-2 rounded-full border px-2.5 py-1.5 text-[10px] font-medium sm:flex ${connectionStatus === "connected" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : connectionStatus === "checking" ? "border-orange-400/20 bg-orange-400/10 text-orange-200" : "border-white/10 bg-white/[0.03] text-zinc-500"}`}><span className={`h-1.5 w-1.5 rounded-full ${connectionStatus === "connected" ? "bg-emerald-400" : connectionStatus === "checking" ? "animate-pulse bg-orange-400" : "bg-zinc-600"}`} />{connectionStatus === "connected" ? "Supabase connected" : connectionStatus === "checking" ? "Checking database" : hasSupabaseConfig ? "Run SQL setup" : "Local demo"}</span><a href="/" target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:border-orange-400/30 hover:text-white sm:flex"><Icon name="eye" size={15} /> View site</a><div className="sm:hidden"><InstallAdminButton compact /></div><button type="button" aria-label="Notifications" className="admin-icon-btn relative"><Icon name="bell" size={18} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-orange-400" /></button><div className="hidden h-7 w-px bg-white/10 sm:block" /><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 to-red-600 text-xs font-bold text-[#2e0904]">A</div><div className="hidden leading-tight sm:block"><p className="text-xs font-semibold text-white">Admin</p><p className="text-[10px] text-zinc-500">Manager</p></div><button type="button" onClick={logout} className="ml-1 text-zinc-500 hover:text-white lg:hidden" aria-label="Sign out"><Icon name="logout" size={16} /></button></div></div>
         </header>
 
         <main className="admin-main">
@@ -518,7 +600,7 @@ export default function AdminPage() {
 }
 
 function LoginScreen({ username, password, error, onUsername, onPassword, onSubmit }: { username: string; password: string; error: string; onUsername: (value: string) => void; onPassword: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  return <div className="admin-login-bg flex min-h-screen items-center justify-center overflow-hidden px-4 py-8"><div className="admin-login-orb admin-login-orb-one" /><div className="admin-login-orb admin-login-orb-two" /><div className="relative z-10 w-full max-w-[430px]"><div className="mb-8 text-center"><div className="mx-auto flex h-16 w-28 items-center justify-center rounded-[22px] border border-orange-300/25 bg-[#170b0d] px-3 shadow-[0_0_55px_rgba(255,84,15,0.17)]"><Image src="/logo/logo.png" alt="Umbrella Art Cafe" width={150} height={135} priority className="h-12 w-auto object-contain" /></div><p className="mt-5 font-display text-lg font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></p><p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-orange-300/55">Ella · admin studio</p></div><div className="rounded-[28px] border border-white/10 bg-[#130b0d]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-8"><p className="admin-eyebrow">Good to see you</p><h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white">Welcome back</h1><p className="mt-2 text-sm leading-relaxed text-zinc-500">Sign in to manage dishes, orders and daily sales.</p><form onSubmit={onSubmit} className="mt-7 space-y-4"><label className="block text-xs font-medium text-zinc-300">Username<input autoComplete="username" value={username} onChange={(event) => onUsername(event.target.value)} className={inputClass} placeholder="Enter username" /></label><label className="block text-xs font-medium text-zinc-300">Password<input autoComplete="current-password" type="password" value={password} onChange={(event) => onPassword(event.target.value)} className={inputClass} placeholder="Enter password" /></label>{error && <p className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-xs text-red-300">{error}</p>}<button type="submit" className="admin-primary-btn mt-2 w-full justify-center">Sign in <Icon name="arrow" size={16} /></button></form><div className="mt-6 border-t border-white/[0.07] pt-5"><p className="text-center text-[11px] text-zinc-600">Demo access · <span className="text-zinc-400">admin</span> / <span className="text-zinc-400">umbrella123</span></p></div></div><p className="mt-6 text-center text-[11px] text-zinc-600">Private workspace · Cafe Umbrella, Ella</p></div></div>;
+  return <div className="admin-login-bg flex min-h-screen items-center justify-center overflow-hidden px-4 py-8"><div className="admin-login-orb admin-login-orb-one" /><div className="admin-login-orb admin-login-orb-two" /><div className="relative z-10 w-full max-w-[430px]"><div className="mb-8 text-center"><div className="mx-auto flex h-16 w-28 items-center justify-center rounded-[22px] border border-orange-300/25 bg-[#170b0d] px-3 shadow-[0_0_55px_rgba(255,84,15,0.17)]"><Image src="/logo/logo.png" alt="Umbrella Art Cafe" width={150} height={135} priority className="h-12 w-auto object-contain" /></div><p className="mt-5 font-display text-lg font-bold text-white">Cafe <span className="text-gradient-fire">Umbrella</span></p><p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-orange-300/55">Ella · admin studio</p></div><div className="rounded-[28px] border border-white/10 bg-[#130b0d]/90 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-8"><p className="admin-eyebrow">Good to see you</p><h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white">Welcome back</h1><p className="mt-2 text-sm leading-relaxed text-zinc-500">Sign in to manage dishes, orders and daily sales.</p><form onSubmit={onSubmit} className="mt-7 space-y-4"><label className="block text-xs font-medium text-zinc-300">Username<input autoComplete="username" value={username} onChange={(event) => onUsername(event.target.value)} className={inputClass} placeholder="Enter username" /></label><label className="block text-xs font-medium text-zinc-300">Password<input autoComplete="current-password" type="password" value={password} onChange={(event) => onPassword(event.target.value)} className={inputClass} placeholder="Enter password" /></label>{error && <p className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-xs text-red-300">{error}</p>}<button type="submit" className="admin-primary-btn mt-2 w-full justify-center">Sign in <Icon name="arrow" size={16} /></button></form><div className="mt-5 rounded-2xl border border-orange-400/15 bg-orange-400/[0.04] p-3.5"><p className="text-xs font-medium text-white">Use Admin faster on mobile</p><p className="mt-1 text-[11px] leading-relaxed text-zinc-500">Save a one-tap shortcut to the order desk on your phone.</p><div className="mt-3"><InstallAdminButton /></div></div><div className="mt-6 border-t border-white/[0.07] pt-5"><p className="text-center text-[11px] text-zinc-600">Demo access · <span className="text-zinc-400">admin</span> / <span className="text-zinc-400">umbrella123</span></p></div></div><p className="mt-6 text-center text-[11px] text-zinc-600">Private workspace · Cafe Umbrella, Ella</p></div></div>;
 }
 
 function NavButton({ item, active, onClick, mobile = false }: { item: (typeof navItems)[number]; active: boolean; onClick: () => void; mobile?: boolean }) {
