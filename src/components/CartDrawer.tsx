@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CafeOrder, OrderType, orderTypes } from "@/data/admin";
-import { buildWhatsAppOrderLink } from "@/data/config";
 import { orderToRow, supabase } from "@/lib/supabase";
 import { MenuItem } from "@/data/types";
 
@@ -37,17 +36,7 @@ export default function CartDrawer({
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
 
-  const lines = items.map(
-    (i) =>
-      `${quantities[i.id]} × ${i.name} — Rs. ${(
-        i.price * quantities[i.id]
-      ).toLocaleString("en-LK")}`
-  );
   const total = items.reduce((s, i) => s + i.price * quantities[i.id], 0);
-  const waLink = buildWhatsAppOrderLink([
-    `Order type: ${orderType}`,
-    ...lines,
-  ], total);
 
   function closeDrawer() {
     setOrderError(null);
@@ -61,7 +50,7 @@ export default function CartDrawer({
       return;
     }
     if (!supabase) {
-      setOrderError("Online ordering is not connected yet. Please use WhatsApp or show this order to the waiter.");
+      setOrderError("Online ordering is not connected yet. Please try again after the backend is configured.");
       return;
     }
 
@@ -91,7 +80,7 @@ export default function CartDrawer({
 
     const { error } = await supabase.from("orders").insert(orderToRow(order));
     if (error) {
-      setOrderError("Order could not be sent. Please run the Supabase schema or use WhatsApp instead.");
+      setOrderError("Order could not be sent. Please run the Supabase schema and try again.");
     } else {
       setSubmittedOrderId(orderId);
     }
@@ -233,24 +222,6 @@ export default function CartDrawer({
                     {submitting ? "Sending order..." : submittedOrderId ? "Order sent to kitchen" : "Confirm order"}
                   </button>
                 </div>
-
-                {waLink ? (
-                  <a
-                    href={waLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb347] via-[#ff540f] to-[#e6202e] py-3.5 text-sm font-bold uppercase tracking-wide text-[#2b0500] shadow-[0_10px_30px_-8px_rgba(230,32,46,0.7)] transition active:scale-[0.98]"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.2 1.2-1.7 1.2-.4.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.5-2.6-1.1-4.3-3.7-4.4-3.9-.1-.2-1.1-1.4-1.1-2.7 0-1.3.7-1.9.9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.3.3c-.1.1-.2.3-.1.5.2.3.7 1.2 1.6 1.9 1.1 1 2 1.3 2.3 1.4.2.1.4.1.5-.1l.8-1c.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.1.1.5-.1 1.1Z" />
-                    </svg>
-                    Order via WhatsApp
-                  </a>
-                ) : (
-                  <p className="mt-3 rounded-2xl border border-orange-400/15 bg-white/[0.02] px-4 py-3 text-center text-xs leading-relaxed text-zinc-400">
-                    🙋 Show this screen to your waiter to place the order.
-                  </p>
-                )}
 
                 <button
                   onClick={onClear}

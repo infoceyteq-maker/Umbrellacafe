@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CAFE, SOCIAL_LINKS } from "@/data/config";
+import { SOCIAL_LINKS } from "@/data/config";
 
 const ICON_CLASS =
   "group relative flex h-10 w-10 items-center justify-center rounded-full border border-orange-400/25 bg-white/[0.03] text-orange-200 transition hover:-translate-y-0.5 hover:border-orange-400/70 hover:bg-white/[0.07] hover:text-orange-100 hover:shadow-[0_8px_22px_-8px_rgba(255,84,15,0.75)] sm:h-11 sm:w-11";
@@ -85,23 +85,9 @@ export default function SocialBar() {
         </a>
       </div>
 
-      {/* WhatsApp number + address */}
-      <div className="space-y-1 text-center">
-        <a
-          href={`https://wa.me/${CAFE.whatsappNumber}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-200 transition hover:text-orange-100 sm:text-sm"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.3 0 .5l-.4.5c-.1.2-.3.3-.1.6.1.3.6 1.1 1.3 1.7.9.8 1.6 1 1.9 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.6-.1l1.8.8c.3.1.5.2.5.4.1.1.1.7-.1 1.4z" />
-          </svg>
-          {CAFE.whatsappDisplay}
-        </a>
-        <p className="mx-auto max-w-xs text-[11px] leading-relaxed text-zinc-500 sm:text-xs">
-          {CAFE.address}
-        </p>
-      </div>
+      <p className="mx-auto max-w-xs text-center text-[11px] leading-relaxed text-zinc-500 sm:text-xs">
+        Cafe Umbrella · Ella, Sri Lanka
+      </p>
     </motion.div>
   );
 }
