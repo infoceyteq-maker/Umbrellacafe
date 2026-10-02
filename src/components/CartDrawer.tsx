@@ -35,6 +35,9 @@ export default function CartDrawer({
   const [submitting, setSubmitting] = useState(false);
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [rating, setRating] = useState(5);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const total = items.reduce((s, i) => s + i.price * quantities[i.id], 0);
 
@@ -226,6 +229,7 @@ export default function CartDrawer({
                   </div>
                   {orderError && <p className="mt-2 rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2 text-[10px] leading-relaxed text-red-300">{orderError}</p>}
                   {submittedOrderId && <p className="mt-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[10px] leading-relaxed text-emerald-300">Order sent to Cafe Umbrella. The team can now see it in the admin order desk.</p>}
+                  {submittedOrderId && <div className="mt-4 rounded-xl border border-orange-400/15 bg-orange-400/[0.04] p-3"><p className="text-xs font-semibold text-orange-200">How was your food?</p><div className="mt-2 flex gap-1">{[1,2,3,4,5].map((n) => <button type="button" key={n} onClick={() => setRating(n)} className={`text-lg ${n <= rating ? "text-amber-300" : "text-zinc-600"}`}>★</button>)}</div><textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Tell us about your meal..." className="mt-2 min-h-16 w-full rounded-lg border border-white/10 bg-black/20 p-2 text-xs text-white" /><button type="button" disabled={feedbackSent} onClick={async () => { if (supabase) await supabase.from("food_feedback").insert({ order_id: submittedOrderId, rating, comment: feedback.trim() }); setFeedbackSent(true); }} className="mt-2 rounded-lg bg-orange-400/15 px-3 py-2 text-[10px] font-semibold text-orange-200">{feedbackSent ? "Thank you for your feedback" : "Send feedback"}</button></div>}
                   <button type="button" onClick={submitOrder} disabled={submitting || Boolean(submittedOrderId)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb347] via-[#ff540f] to-[#e6202e] py-3 text-xs font-bold uppercase tracking-wide text-[#2b0500] shadow-[0_10px_30px_-8px_rgba(230,32,46,0.55)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
                     {submitting ? "Sending order..." : submittedOrderId ? "Order sent to kitchen" : "Confirm order"}
                   </button>
