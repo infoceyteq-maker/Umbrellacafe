@@ -9,6 +9,7 @@ import "@fontsource/poppins/700.css";
 import "@fontsource/poppins/800.css";
 import "./globals.css";
 import "./admin.css";
+import CosmicBackground from "@/components/CosmicBackground";
 
 export const metadata: Metadata = {
   title: "Cafe Umbrella — Ella",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070304",
+  themeColor: "#02120b",
   width: "device-width",
   initialScale: 1,
 };
@@ -32,8 +33,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full bg-[#070304] text-[#f7efe9] antialiased">
-        {children}
+      <body className="relative min-h-full bg-[#010a07] text-[#c7e9c0] antialiased">
+        <CosmicBackground />
+        <div className="relative z-10">{children}</div>
       </body>
     </html>
   );

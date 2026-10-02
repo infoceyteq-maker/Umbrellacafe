@@ -41,9 +41,9 @@ export const orderStatuses: OrderStatus[] = [
 ];
 
 export const statusStyles: Record<OrderStatus, string> = {
-  Preparing: "border-orange-400/25 bg-orange-400/10 text-orange-200",
-  Ready: "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
-  Completed: "border-sky-400/25 bg-sky-400/10 text-sky-300",
+  Preparing: "border-lime-400/25 bg-lime-400/10 text-lime-200",
+  Ready: "border-[#39ff88]/30 bg-[#39ff88]/10 text-[#7cf7b0]",
+  Completed: "border-teal-400/25 bg-teal-400/10 text-teal-200",
   Cancelled: "border-red-400/25 bg-red-400/10 text-red-300",
 };
 

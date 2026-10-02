@@ -1,18 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #070304;
-  --bg-elevated: #16090a;
-  --bg-card: #150809;
-  --red: #e6202e;
-  --red-deep: #b30f1e;
-  --orange: #ff540f;
-  --orange-neon: #ff6a1a;
-  --flame: #ffb347;
-  --flame-soft: #ffd27a;
-  --text: #f7efe9;
-  --text-dim: #a89c96;
-  --border: rgba(255, 84, 15, 0.18);
+  /* Emerald / dark-green cosmic palette */
+  --bg: #02120b;
+  --bg-deep: #010a07;
+  --bg-elevated: #06241a;
+  --bg-card: #052017;
+  --emerald-dark: #064e3b;
+  --emerald: #059669;
+  --emerald-bright: #10b981;
+  --green-radiant: #39ff88;
+  --green-radiant-soft: #7cf7b0;
+  /* legacy aliases kept so existing utilities stay in sync */
+  --red: #059669;
+  --red-deep: #064e3b;
+  --orange: #22c77e;
+  --orange-neon: #2de28a;
+  --flame: #7cf7b0;
+  --flame-soft: #c7e9c0;
+  --text: #c7e9c0;
+  --text-dim: #a1d99b;
+  --border: rgba(45, 226, 138, 0.18);
 }
 
 @theme inline {
@@ -32,7 +40,7 @@
 
 html,
 body {
-  background: var(--bg);
+  background: var(--bg-deep);
   color: var(--text);
 }
 
@@ -72,9 +80,9 @@ body {
 /* ---------- Backdrop texture (fire glow) ---------- */
 .grain-bg {
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(230, 32, 46, 0.11), transparent 40%),
-    radial-gradient(circle at 85% 0%, rgba(255, 84, 15, 0.11), transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(179, 15, 30, 0.12), transparent 50%);
+    radial-gradient(circle at 15% 10%, rgba(5, 150, 105, 0.11), transparent 40%),
+    radial-gradient(circle at 85% 0%, rgba(45, 226, 138, 0.11), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(6, 95, 70, 0.12), transparent 50%);
 }
 
 /* ---------- Animations ---------- */
@@ -128,10 +136,10 @@ body {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 60, 10, 0.6);
+    box-shadow: 0 0 0 0 rgba(57, 255, 136, 0.6);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 60, 10, 0);
+    box-shadow: 0 0 0 8px rgba(57, 255, 136, 0);
   }
 }
 
@@ -209,9 +217,9 @@ body {
   background: linear-gradient(
     100deg,
     transparent 30%,
-    rgba(255, 130, 50, 0.14) 45%,
-    rgba(255, 170, 90, 0.26) 50%,
-    rgba(255, 130, 50, 0.14) 55%,
+    rgba(124, 247, 176, 0.14) 45%,
+    rgba(199, 233, 192, 0.26) 50%,
+    rgba(124, 247, 176, 0.14) 55%,
     transparent 70%
   );
   transform: translateX(-120%) skewX(-20deg);
@@ -232,4 +240,142 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+
+/* ---------- Emerald cosmic background ---------- */
+.cosmic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -10%, #0b5d43 0%, transparent 55%),
+    radial-gradient(ellipse 90% 70% at 10% 110%, #06452f 0%, transparent 60%),
+    linear-gradient(180deg, #02150e 0%, #010a07 55%, #021309 100%);
+}
+
+.cosmic-nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  mix-blend-mode: screen;
+}
+
+.cosmic-nebula-1 {
+  width: 60vmax;
+  height: 60vmax;
+  top: -18vmax;
+  left: -12vmax;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.42), rgba(5, 150, 105, 0.16) 55%, transparent 72%);
+  animation: cosmic-drift-a 26s ease-in-out infinite;
+}
+
+.cosmic-nebula-2 {
+  width: 52vmax;
+  height: 52vmax;
+  bottom: -16vmax;
+  right: -10vmax;
+  background: radial-gradient(circle, rgba(57, 255, 136, 0.3), rgba(6, 78, 59, 0.2) 55%, transparent 72%);
+  animation: cosmic-drift-b 32s ease-in-out infinite;
+}
+
+.cosmic-nebula-3 {
+  width: 40vmax;
+  height: 40vmax;
+  top: 32%;
+  left: 48%;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.26), transparent 70%);
+  animation: cosmic-drift-c 38s ease-in-out infinite;
+}
+
+.cosmic-aurora {
+  position: absolute;
+  inset: -30% -10%;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    transparent 0deg,
+    rgba(57, 255, 136, 0.1) 70deg,
+    transparent 150deg,
+    rgba(16, 185, 129, 0.12) 250deg,
+    transparent 360deg
+  );
+  filter: blur(55px);
+  animation: cosmic-spin 48s linear infinite;
+}
+
+.cosmic-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 18%, rgba(199, 233, 192, 0.9), transparent),
+    radial-gradient(1.4px 1.4px at 78% 12%, rgba(161, 217, 155, 0.8), transparent),
+    radial-gradient(1.8px 1.8px at 32% 72%, rgba(124, 247, 176, 0.85), transparent),
+    radial-gradient(1.2px 1.2px at 64% 58%, rgba(199, 233, 192, 0.7), transparent),
+    radial-gradient(1.6px 1.6px at 88% 78%, rgba(57, 255, 136, 0.75), transparent),
+    radial-gradient(1.2px 1.2px at 46% 32%, rgba(199, 233, 192, 0.6), transparent),
+    radial-gradient(1.4px 1.4px at 6% 62%, rgba(161, 217, 155, 0.7), transparent),
+    radial-gradient(1.2px 1.2px at 94% 38%, rgba(124, 247, 176, 0.6), transparent);
+  animation: cosmic-twinkle 5.5s ease-in-out infinite;
+}
+
+.cosmic-stars-slow {
+  background-size: 160% 160%;
+  animation: cosmic-twinkle 8s ease-in-out infinite reverse, cosmic-pan 90s linear infinite;
+  opacity: 0.65;
+}
+
+@keyframes cosmic-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vmax, 4vmax, 0) scale(1.12); }
+}
+
+@keyframes cosmic-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-7vmax, -5vmax, 0) scale(0.92); }
+}
+
+@keyframes cosmic-drift-c {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.75; }
+  50% { transform: translate(-42%, -58%) scale(1.18); opacity: 1; }
+}
+
+@keyframes cosmic-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cosmic-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes cosmic-pan {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmic-nebula,
+  .cosmic-aurora,
+  .cosmic-stars,
+  .cosmic-stars-slow {
+    animation: none !important;
+  }
+}
+
+/* ---------- Radiant green controls ---------- */
+.btn-radiant {
+  background: linear-gradient(135deg, #7cf7b0 0%, #39ff88 45%, #10b981 100%);
+  color: #03291b;
+  box-shadow: 0 10px 30px -10px rgba(57, 255, 136, 0.55);
+}
+
+.btn-radiant:hover {
+  filter: brightness(1.08);
+}
+
+.bar-radiant {
+  background: linear-gradient(180deg, #7cf7b0, #10b981 70%, #059669);
 }

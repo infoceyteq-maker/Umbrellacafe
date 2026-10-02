@@ -51,7 +51,7 @@ export default function FloatingBits({
               width={b.size * (variant === "hero" ? 1.8 : 1)}
               height={b.size * (variant === "hero" ? 1.8 : 1)}
               viewBox="0 0 17 16"
-              fill={b.variant === "b" ? "#e6202e" : "#ff540f"}
+              fill={b.variant === "b" ? "#059669" : "#22c77e"}
               opacity={variant === "hero" ? 0.9 : 0.55}
             >
               {LEAF}
@@ -63,7 +63,7 @@ export default function FloatingBits({
                 width: b.size * (variant === "hero" ? 1.6 : 1),
                 height: b.size * (variant === "hero" ? 1.6 : 1),
                 background:
-                  "radial-gradient(circle, #ffd27a 0%, #ff540f 60%, rgba(230,32,46,0.9) 85%, transparent 100%)",
+                  "radial-gradient(circle, #c7e9c0 0%, #22c77e 60%, rgba(5, 150, 105,0.9) 85%, transparent 100%)",
                 opacity: variant === "hero" ? 0.85 : 0.5,
               }}
             />
@@ -74,7 +74,7 @@ export default function FloatingBits({
       {Array.from({ length: steamCount }).map((_, i) => (
         <span
           key={`steam-${i}`}
-          className="animate-steam absolute block rounded-full bg-orange-100/25 blur-[6px]"
+          className="animate-steam absolute block rounded-full bg-emerald-100/25 blur-[6px]"
           style={{
             bottom: variant === "hero" ? "10%" : "14%",
             left: `${38 + i * 12}%`,

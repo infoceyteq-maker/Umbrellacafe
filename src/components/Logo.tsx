@@ -12,13 +12,13 @@ export default function Logo({ className = "h-9 w-9" }: { className?: string }) 
     >
       <defs>
         <linearGradient id="umbrellaFire" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ffd27a" />
-          <stop offset="45%" stopColor="#ff540f" />
-          <stop offset="100%" stopColor="#e6202e" />
+          <stop offset="0%" stopColor="#c7e9c0" />
+          <stop offset="45%" stopColor="#22c77e" />
+          <stop offset="100%" stopColor="#059669" />
         </linearGradient>
         <radialGradient id="umbrellaGlow" cx="50%" cy="38%" r="60%">
-          <stop offset="0%" stopColor="#ff6a1a" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#ff6a1a" stopOpacity="0" />
+          <stop offset="0%" stopColor="#2de28a" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#2de28a" stopOpacity="0" />
         </radialGradient>
       </defs>
 
