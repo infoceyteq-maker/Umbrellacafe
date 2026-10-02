@@ -10,6 +10,7 @@ import DishModal from "@/components/DishModal";
 import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
 import FloatingBits from "@/components/FloatingBits";
+import SocialBar from "@/components/SocialBar";
 import { categories, menuItems } from "@/data/menu";
 import { Category, MenuItem } from "@/data/types";
 
@@ -83,6 +84,9 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#070304] via-transparent to-transparent" />
         </motion.div>
 
+        {/* Facebook · Instagram · Location + contact details */}
+        <SocialBar />
+
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -128,7 +132,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-orange-400/10 px-6 py-8 text-center text-xs text-zinc-600">
-        <p>Cafe Umbrella · Ella, Sri Lanka</p>
+        <p>Cafe Umbrella · Passara Road, 3rd Mile, Ella, Uva Province 90090</p>
         <p className="mt-1">Made with 🔥 for our guests in the hills</p>
       </footer>
 

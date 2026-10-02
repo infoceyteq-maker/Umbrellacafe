@@ -11,7 +11,16 @@ export const CAFE = {
   name: "Cafe Umbrella",
   tagline: "Ella · Digital Menu",
   location: "Ella, Sri Lanka",
-  whatsappNumber: "",
+  address: "Passara Road, 3rd Mile, Ella, Uva Province 90090",
+  whatsappNumber: "94712054801",
+  whatsappDisplay: "+94 71 205 4801",
+} as const;
+
+/** Social / map links shown as icon buttons under the cover image. */
+export const SOCIAL_LINKS = {
+  facebook: "https://www.facebook.com/profile.php?id=61573828236464",
+  instagram: "https://www.instagram.com/cafe_umbrella_",
+  location: "https://share.google/cYiIixkUGF5D3pMt7",
 } as const;
 
 export function buildWhatsAppOrderLink(
