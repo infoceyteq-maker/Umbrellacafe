@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { SOCIAL_LINKS } from "@/data/config";
 
 const ICON_CLASS =
-  "group relative flex h-10 w-10 items-center justify-center rounded-full border border-orange-400/25 bg-white/[0.03] text-orange-200 transition hover:-translate-y-0.5 hover:border-orange-400/70 hover:bg-white/[0.07] hover:text-orange-100 hover:shadow-[0_8px_22px_-8px_rgba(255,84,15,0.75)] sm:h-11 sm:w-11";
+  "group relative flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/25 bg-white/[0.03] text-emerald-200 transition hover:-translate-y-0.5 hover:border-emerald-400/70 hover:bg-white/[0.07] hover:text-emerald-100 hover:shadow-[0_8px_22px_-8px_rgba(45,155,119,0.75)] sm:h-11 sm:w-11";
 
 export default function SocialBar() {
   return (
@@ -15,7 +15,7 @@ export default function SocialBar() {
       className="relative z-10 mt-2 mb-6 flex flex-col items-center gap-3"
     >
       {/* Cafe name — main heading */}
-      <h1 className="font-display text-center text-3xl font-extrabold leading-tight tracking-tight drop-shadow-[0_0_28px_rgba(255,84,15,0.45)] sm:text-5xl">
+      <h1 className="font-display text-center text-3xl font-extrabold leading-tight tracking-tight drop-shadow-[0_0_28px_rgba(45,155,119,0.45)] sm:text-5xl">
         <span className="text-gradient-fire">Cafe Umbrella</span>
         <span className="text-white"> — Ella</span>
       </h1>
