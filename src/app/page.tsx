@@ -144,6 +144,9 @@ export default function Home() {
       <footer className="border-t border-orange-400/10 px-6 py-8 text-center text-xs text-zinc-600">
         <p>Cafe Umbrella · Passara Road, 3rd Mile, Ella, Uva Province 90090</p>
         <p className="mt-1">Made with 🔥 for our guests in the hills</p>
+        <a href="/admin" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-orange-400/15 bg-orange-400/[0.04] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.15em] text-orange-300/65 transition hover:border-orange-400/40 hover:bg-orange-400/10 hover:text-orange-200">
+          Staff admin <span aria-hidden="true">→</span>
+        </a>
       </footer>
 
       <DishModal item={selected} onClose={() => setSelected(null)} onOrder={handleOrder} />
