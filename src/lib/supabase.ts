@@ -1,10 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { AdminMenuItem, CafeOrder, OrderStatus, OrderType } from "@/data/admin";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// These are browser-safe Supabase values. Environment variables take priority
+// for local/hosted deployments; the public fallback also keeps a static GitHub
+// Pages build connected without server-side secrets.
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://kkyaekpsnjaualjiwirg.supabase.co";
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "sb_publishable_Ge1U575opzHdv25dophczQ_VcWQyTY_";
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
 export const supabase = hasSupabaseConfig
